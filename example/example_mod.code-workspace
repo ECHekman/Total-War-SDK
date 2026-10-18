@@ -7,11 +7,11 @@
 		{
 			// Every Lua script inside the game's packs and your mods (read-only).
 			"name": "Virtual TW Source Files",
-			"uri": "twsource:/"
+			"uri": "totalwar:/"
 		}
 	],
 	"settings": {
-		"twdev.game": "warhammer_3",
+		"totalwar.game": "warhammer_3",
 		// Show the Run and Debug view (variables, call stack) when the game pauses.
 		"debug.openDebug": "openOnDebugBreak",
 		"files.exclude": {

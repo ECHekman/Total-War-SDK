@@ -54,7 +54,7 @@ export class Harness {
 		});
 		await new Promise<void>((resolve) => this.server.listen(0, '127.0.0.1', resolve));
 		const port = (this.server.address() as net.AddressInfo).port;
-		this.dc = new DebugClient('node', 'unused', 'tw-lua');
+		this.dc = new DebugClient('node', 'unused', 'totalwar-lua');
 		this.dc.defaultTimeout = 15000;
 		await this.dc.start(port);
 		this.dc.on('output', (e: DebugProtocol.OutputEvent) => this.outputEvents.push(e));
@@ -85,7 +85,7 @@ export class Harness {
 	async launch(breakpoints: DebugProtocol.SourceBreakpoint[] = [], extra: object = {},
 		exceptionFilters?: string[]): Promise<void> {
 		const initialized = this.dc.waitForEvent('initialized');
-		await this.dc.initializeRequest({ adapterID: 'tw-lua', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
+		await this.dc.initializeRequest({ adapterID: 'totalwar-lua', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
 		await initialized;
 		if (breakpoints.length) {
 			await this.dc.setBreakpointsRequest({ source: { path: TEST_SCRIPT }, breakpoints });

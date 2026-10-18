@@ -5,17 +5,17 @@ import * as vscode from 'vscode';
 import { DEFAULT_GAME, gameByKey, gameForExecutable } from './games';
 import { findGameExecutable } from './steam';
 
-export const DEBUG_TYPE = 'tw-lua';
+export const DEBUG_TYPE = 'totalwar-lua';
 
 function configuredGame(): string {
-	return vscode.workspace.getConfiguration('twdev').get<string>('game') ?? DEFAULT_GAME;
+	return vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? DEFAULT_GAME;
 }
 
 export function gameKeyFor(config: vscode.DebugConfiguration): string {
 	return gameForExecutable(String(config.executable ?? ''))?.key ?? configuredGame();
 }
 
-/** Fills in and validates `tw-lua` launch/attach configurations. */
+/** Fills in and validates `totalwar-lua` launch/attach configurations. */
 export class TwDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
 	constructor(private readonly onResolved: (config: vscode.DebugConfiguration) => void) {}
 

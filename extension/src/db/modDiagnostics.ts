@@ -40,7 +40,7 @@ export class ModDiagnostics implements vscode.Disposable {
 				this.schedule();
 			}),
 			vscode.workspace.onDidChangeConfiguration((e) => {
-				if (e.affectsConfiguration('twdev.modDiagnostics')) {
+				if (e.affectsConfiguration('totalwar.modDiagnostics')) {
 					this.schedule(0);
 				}
 			}),
@@ -48,7 +48,7 @@ export class ModDiagnostics implements vscode.Disposable {
 	}
 
 	private get enabled(): boolean {
-		return vscode.workspace.getConfiguration('twdev').get<boolean>('modDiagnostics', true) && this.enabledHere();
+		return vscode.workspace.getConfiguration('totalwar').get<boolean>('modDiagnostics', true) && this.enabledHere();
 	}
 
 	/** Checks again a moment after the last change. */

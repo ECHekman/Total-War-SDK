@@ -11,14 +11,14 @@ const STRING_LITERAL = /"[^"\n\\]*"|'[^'\n\\]*'/;
 
 /**
  * Hovering a string literal in Lua that is a DB key (a unit, building, effect...)
- * shows its effective row. Setting `twdev.dbHover`: "debugging" (default, only
+ * shows its effective row. Setting `totalwar.dbHover`: "debugging" (default, only
  * while a Total War debug session runs), "always" or "off".
  */
 export class DbHoverProvider implements vscode.HoverProvider {
 	constructor(private readonly db: DbService) {}
 
 	async provideHover(doc: vscode.TextDocument, pos: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> {
-		const mode = vscode.workspace.getConfiguration('twdev').get<string>('dbHover', 'debugging');
+		const mode = vscode.workspace.getConfiguration('totalwar').get<string>('dbHover', 'debugging');
 		if (mode === 'off' || (mode === 'debugging' && vscode.debug.activeDebugSession?.type !== DEBUG_TYPE)) {
 			return undefined;
 		}
@@ -40,10 +40,10 @@ export class DbHoverProvider implements vscode.HoverProvider {
 			return undefined;
 		}
 		const md = new vscode.MarkdownString(undefined, true);
-		md.isTrusted = { enabledCommands: ['twdev.openDbTable'] };
+		md.isTrusted = { enabledCommands: ['totalwar.openDbTable'] };
 		for (const { table, row } of found.slice(0, 3)) {
 			const t = await this.db.table(table);
-			const open = `command:twdev.openDbTable?${encodeURIComponent(JSON.stringify([table, row.key]))}`;
+			const open = `command:totalwar.openDbTable?${encodeURIComponent(JSON.stringify([table, row.key]))}`;
 			md.appendMarkdown(`**${table}** — from \`${row.source.pack}\``);
 			if (row.overridden.length) {
 				md.appendMarkdown(` (overrides ${row.overridden.map((o) => `\`${o.source.pack}\``).join(', ')})`);

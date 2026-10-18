@@ -15,7 +15,7 @@ against the game, and pack and launch it, all from one extension.
 2. Open `pack/script/campaign/mod/<your mod>.lua` and set a breakpoint in `on_heartbeat`.
 3. Run and Debug (Ctrl+Shift+D) → **Launch into a save** → F5, and pick a save.
 
-Before every launch the project's `pack` task packs your mod and installs it.
+Before every launch the project's `totalwar-pack` task packs your mod and installs it.
 The debug session then installs the debugger mod and lists it in the
 project's mod list file, so there is nothing else to set up. The project's
 README explains the rest.
@@ -48,17 +48,17 @@ README explains the rest.
   - add levels to, teleport or kill a character.
 - **TotalWar: Start/Stop Event Monitor** lists the script events the game fires,
   with their faction, character, region and so on, in the `TW Script Events`
-  output. `twdev.eventMonitor.exclude` leaves out noisy events.
+  output. `totalwar.eventMonitor.exclude` leaves out noisy events.
 - **Run File / Run Selection in the Game** (editor context menu) runs Lua in the
-  game's script environment. With `twdev.hotReload`, saving a mod script runs it
+  game's script environment. With `totalwar.hotReload`, saving a mod script runs it
   again in the game. Guard any listeners it adds, or they are added twice.
 - **TotalWar: Start Profiler**, then **Stop Profiler and Show Results**, shows
   where the scripts spend their time, as the busiest functions and a flame graph.
-  The sample interval is `twdev.profiler.interval` Lua instructions.
+  The sample interval is `totalwar.profiler.interval` Lua instructions.
 
 ### Virtual source files
 Every file in the game's packs and in the mods in your mod list is available
-as the read-only `twsource:/` file system:
+as the read-only `totalwar:/` file system:
 - `@basegame/` holds the game's own files and `@mods/<pack>/` holds each mod's
   files, so you can see where a file comes from.
 - Lua files open as text, DB tables (`db/<table>/<file>`) open read-only in the
@@ -73,7 +73,7 @@ running debug session.
 
 ```jsonc
 // my_mod.code-workspace
-{ "folders": [ { "path": "." }, { "name": "Virtual TW Source Files", "uri": "twsource:/" } ] }
+{ "folders": [ { "path": "." }, { "name": "Virtual TW Source Files", "uri": "totalwar:/" } ] }
 ```
 
 You can also run **TotalWar: Show Virtual Source Files** while not debugging.
@@ -81,7 +81,7 @@ You can also run **TotalWar: Show Virtual Source Files** while not debugging.
 The game alone has over 700,000 files. **TotalWar: Filter Virtual Files…**
 (also in the context menu of the virtual folders) hides kinds of files: audio,
 animations, models, textures and so on. Folders left empty disappear. The
-command writes the `twdev.virtualFiles.exclude` setting, which also accepts
+command writes the `totalwar.virtualFiles.exclude` setting, which also accepts
 your own glob patterns (`*.wem`, `ui/skins/**`). Hidden files still open from
 the debugger and from links.
 
@@ -97,13 +97,13 @@ game's `data__`), and the first row with a given key wins.
 - In the Debug Console, `:db <table> [key filter]` or `:db <key>` looks up rows.
   It works without the game running.
 - Hover a key string in Lua (`"wh_main_emp_inf_swordsmen"`) to see its row and
-  its texts, for example a unit's on-screen name (`twdev.dbHover`).
+  its texts, for example a unit's on-screen name (`totalwar.dbHover`).
 - **TotalWar: Show Conflicts Between Mods in the Mod List** lists the files and
   DB rows that more than one mod in the mod list contains, and which one the game uses.
 
 ### DB and loc editors
 Opening a table file in your mod (`pack/db/<table>/<file>`) shows it in the
-same grid, editable. Saving writes the binary table, and the `pack` task packs it.
+same grid, editable. Saving writes the binary table, and the `totalwar-pack` task packs it.
 
 - Double-click a cell (or press Enter or F2) to edit it. Booleans toggle, and
   numbers are checked against the column type. Reference columns suggest the
@@ -123,8 +123,8 @@ same grid, editable. Saving writes the binary table, and the `pack` task packs i
   tooltip). **TotalWar: New Loc File…** creates one.
 - **TSV for git**: tables and loc files can also be kept as RPFM's TSV text
   (`<file>.tsv`, `<file>.loc.tsv`), which diffs and merges in git. They open in
-  the same editor, and the `pack` task packs them as binary files at their own
-  path without `.tsv`. `twdev.newTableFormat` picks the format of new files.
+  the same editor, and the `totalwar-pack` task packs them as binary files at their own
+  path without `.tsv`. `totalwar.newTableFormat` picks the format of new files.
 - **TotalWar: Copy Game Entity into the Mod…** (also the copy button on a table
   in the Game Database view) copies a unit, building, effect bundle, and so on
   under a new key. It copies:
@@ -141,11 +141,11 @@ same grid, editable. Saving writes the binary table, and the `pack` task packs i
 Decoding tables needs an RPFM schema. It is downloaded from
 [rpfm-schemas](https://github.com/Frodo45127/rpfm-schemas) daily (or with
 **TotalWar: Update DB Schema**), and a copy ships with the extension as a
-fallback. Point `twdev.dbSchemaPath` at RPFM's schemas folder to use your own.
+fallback. Point `totalwar.dbSchemaPath` at RPFM's schemas folder to use your own.
 
 ### Mod checks
 In a mod project, the Problems view checks the mod's tables and loc files
-against the game and the mod list (`twdev.modDiagnostics`, or run **TotalWar:
+against the game and the mod list (`totalwar.modDiagnostics`, or run **TotalWar:
 Check Mod DB Tables and Loc Files**). It reports:
 - table versions older than the game's, which crash the game. **TotalWar:
   Migrate DB Table to the Game's Version** rewrites the table; it is also in
@@ -162,14 +162,14 @@ and regenerated after a game update.
 - `core:add_listener` completes the game's event names.
 - In any Lua string, DB keys complete (`"wh_main_emp_inf_sw` →
   `wh_main_emp_inf_swordsmen`, showing the table it is in). Known keys are
-  Ctrl+clickable to open their row (`twdev.dbCompletion`).
+  Ctrl+clickable to open their row (`totalwar.dbCompletion`).
 
 Run **TotalWar: Set Up Lua IntelliSense**, which is offered once in a mod
 project. It uses the Lua extension (`sumneko.lua`, installed on request) and
 sets its workspace settings (`Lua.runtime.version` 5.1, `Lua.workspace.library`).
 
 ### Packing and dependencies
-The `pack` task builds a `.pack` from a folder and installs it into the game.
+The `totalwar-pack` task builds a `.pack` from a folder and installs it into the game.
 Mods can depend on Steam Workshop items, other packs, or other mods you develop;
 see [Mods that depend on other mods](#mods-that-depend-on-other-mods).
 
@@ -186,7 +186,7 @@ launch.json file" → "Total War Lua"):
 ```jsonc
 {
 	"name": "Launch Total War",
-	"type": "tw-lua",
+	"type": "totalwar-lua",
 	"request": "launch",
 	"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
 	"modListFile": "used_mods.txt",
@@ -203,7 +203,7 @@ launch.json file" → "Total War Lua"):
 // tasks.json
 {
 	"label": "Pack my mod",
-	"type": "pack",
+	"type": "totalwar-pack",
 	"packfilesDirectory": "pack",
 	"modName": "my_mod.pack",
 	"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe"
@@ -235,14 +235,14 @@ and warns when the mod list doesn't include it.
 
 ## Mods that depend on other mods
 
-Declare dependencies in the `pack` task, and use a mod list file that belongs
+Declare dependencies in the `totalwar-pack` task, and use a mod list file that belongs
 to the project (not `used_mods.txt`):
 
 ```jsonc
 // tasks.json
 {
 	"label": "Pack my mod",
-	"type": "pack",
+	"type": "totalwar-pack",
 	"packfilesDirectory": "pack",
 	"modName": "my_mod.pack",
 	"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
@@ -267,7 +267,7 @@ in the launch configuration.
 Workshop dependencies download themselves. When an item, or an item it lists
 as required on its Workshop page, is not downloaded, the task asks to subscribe
 to it through Steam (Steam must be running). It waits for the download and lists
-the required items after yours. `twdev.autoSubscribeDependencies` can set this
+the required items after yours. `totalwar.autoSubscribeDependencies` can set this
 to `always` or `never`. With `never`, a missing item stops the launch with a
 link to subscribe yourself. What Steam reports about required items is
 remembered for a day.
@@ -290,10 +290,10 @@ scripts are in the virtual source files (`@mods/<pack>/`).
   unsubscribe from it.
 - If VS Code is closed or crashes, the game notices within a few seconds and
   carries on. A game paused at a breakpoint resumes by itself.
-- The `pack` task converts `.tsv` files (RPFM's format) to binary DB tables and
+- The `totalwar-pack` task converts `.tsv` files (RPFM's format) to binary DB tables and
   loc files. RPFM writes floats in TSV with fewer digits, so a value like
   `0.90000004` comes back as `0.9`.
-- WARHAMMER III is the tested game. The other games in the `twdev.game` setting
+- WARHAMMER III is the tested game. The other games in the `totalwar.game` setting
   (WARHAMMER II, THREE KINGDOMS, TROY, ROME II) are experimental and untested.
 
 ## Thanks

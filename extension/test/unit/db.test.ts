@@ -195,7 +195,7 @@ describe('DB variables', () => {
 			session.start(socket, socket);
 		});
 		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-		const dc = new DebugClient('node', 'unused', 'tw-lua');
+		const dc = new DebugClient('node', 'unused', 'totalwar-lua');
 		try {
 			await dc.start((server.address() as net.AddressInfo).port);
 			await dc.initializeRequest();

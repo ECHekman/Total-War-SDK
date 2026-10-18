@@ -10,7 +10,7 @@ import { findGameExecutable } from './steam';
 export const DEBUGGER_PACK_NAME = 'tw_lua_debugger.pack';
 
 function configuredGame(): string {
-	return vscode.workspace.getConfiguration('twdev').get<string>('game') ?? DEFAULT_GAME;
+	return vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? DEFAULT_GAME;
 }
 
 /**

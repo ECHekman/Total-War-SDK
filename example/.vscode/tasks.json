@@ -7,7 +7,7 @@
 			// executable). Runs before every launch; the debug session then adds the
 			// debugger mod.
 			"label": "Pack example_mod",
-			"type": "pack",
+			"type": "totalwar-pack",
 			"packfilesDirectory": "pack",
 			"modName": "example_mod.pack",
 			"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",

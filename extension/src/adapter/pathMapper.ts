@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-export const VIRTUAL_SCHEME = 'twsource';
+export const VIRTUAL_SCHEME = 'totalwar';
 
-/** Read access to the Lua files inside the game's pack files (the `twsource:` file system). */
+/** Read access to the Lua files inside the game's pack files (the `totalwar:` file system). */
 export interface VirtualSources {
-	/** Returns the `twsource:/...` URI string for a pack path key, if the file exists in the packs. */
+	/** Returns the `totalwar:/...` URI string for a pack path key, if the file exists in the packs. */
 	uriFor(key: string): string | undefined;
 	/** Returns the file contents for a pack path key. */
 	read(key: string): string | undefined;
@@ -26,7 +26,7 @@ export interface MappedSource {
 	/** Lower-case pack relative key, e.g. `script/campaign/mod/foo.lua`. */
 	key: string;
 	name: string;
-	/** File system path or `twsource:/` URI. Undefined when only available by reference. */
+	/** File system path or `totalwar:/` URI. Undefined when only available by reference. */
 	path?: string;
 }
 
@@ -73,7 +73,7 @@ export function chunkToKey(chunk: string): string {
 	return normalizeKey(chunkToRelative(chunk));
 }
 
-/** Whether the debug adapter got a `twsource:` URI (VS Code passes non-file URIs as strings). */
+/** Whether the debug adapter got a `totalwar:` URI (VS Code passes non-file URIs as strings). */
 export function isVirtualPath(p: string): boolean {
 	return p.toLowerCase().startsWith(VIRTUAL_SCHEME + ':');
 }
@@ -103,7 +103,7 @@ export class PathMapper {
 		});
 	}
 
-	/** Maps a path VS Code gave us (file path or twsource URI) to the key used for breakpoints. */
+	/** Maps a path VS Code gave us (file path or totalwar URI) to the key used for breakpoints. */
 	editorPathToKey(p: string): string {
 		if (isVirtualPath(p)) {
 			let rest = p.slice(VIRTUAL_SCHEME.length + 1);
@@ -112,7 +112,7 @@ export class PathMapper {
 			} catch {
 				// keep as is
 			}
-			// twsource:/@basegame/<path> and twsource:/@mods/<pack>/<path>: the path inside the pack.
+			// totalwar:/@basegame/<path> and totalwar:/@mods/<pack>/<path>: the path inside the pack.
 			return normalizeKey(rest.replace(/^\/+/, '')).replace(/^@basegame\//, '').replace(/^@mods\/[^/]+\//, '');
 		}
 		const rel = scriptRelative(p);

@@ -1,7 +1,7 @@
 /**
  * RPFM schemas (`schema_<game>.ron`) needed to decode DB tables.
  *
- * Looked up in order: the `twdev.dbSchemaPath` setting, a copy downloaded from
+ * Looked up in order: the `totalwar.dbSchemaPath` setting, a copy downloaded from
  * the rpfm-schemas repository into the extension's global storage, and the
  * snapshot shipped in the VSIX (`schemas/`).
  */
@@ -26,7 +26,7 @@ export function schemaFileName(game: string): string {
 }
 
 export interface SchemaLocations {
-	/** `twdev.dbSchemaPath`: a schema file, or a folder with `schema_<game>.ron` files. */
+	/** `totalwar.dbSchemaPath`: a schema file, or a folder with `schema_<game>.ron` files. */
 	setting?: string;
 	/** Folder schemas are downloaded to. */
 	downloadDir: string;

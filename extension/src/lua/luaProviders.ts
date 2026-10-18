@@ -34,7 +34,7 @@ export class TwLuaCompletionProvider implements vscode.CompletionItemProvider {
 			});
 		}
 
-		if (!vscode.workspace.getConfiguration('twdev').get<boolean>('dbCompletion', true) || str.prefix.length < MIN_PREFIX) {
+		if (!vscode.workspace.getConfiguration('totalwar').get<boolean>('dbCompletion', true) || str.prefix.length < MIN_PREFIX) {
 			return undefined;
 		}
 		let keys;
@@ -87,7 +87,7 @@ export class DbKeyLinkProvider implements vscode.DocumentLinkProvider {
 	constructor(private readonly db: DbService) {}
 
 	provideDocumentLinks(doc: vscode.TextDocument): vscode.DocumentLink[] {
-		if (!vscode.workspace.getConfiguration('twdev').get<boolean>('dbCompletion', true)) {
+		if (!vscode.workspace.getConfiguration('totalwar').get<boolean>('dbCompletion', true)) {
 			return [];
 		}
 		this.db.prepareKeyIndex();
@@ -102,7 +102,7 @@ export class DbKeyLinkProvider implements vscode.DocumentLinkProvider {
 			const start = doc.positionAt(m.index! + 1);
 			const link = new vscode.DocumentLink(
 				new vscode.Range(start, start.translate(0, key.length)),
-				vscode.Uri.parse(`command:twdev.openDbTable?${encodeURIComponent(JSON.stringify([tables[0], key]))}`));
+				vscode.Uri.parse(`command:totalwar.openDbTable?${encodeURIComponent(JSON.stringify([tables[0], key]))}`));
 			link.tooltip = `Open in ${tables.join(', ')}`;
 			links.push(link);
 		}

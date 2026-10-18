@@ -17,7 +17,7 @@ export class DbGridPanel implements vscode.Disposable {
 			}
 			return;
 		}
-		const panel = vscode.window.createWebviewPanel('twdev.dbGrid', table, vscode.ViewColumn.Active,
+		const panel = vscode.window.createWebviewPanel('totalwar.dbGrid', table, vscode.ViewColumn.Active,
 			{ ...gridWebviewOptions(extensionUri), retainContextWhenHidden: true });
 		DbGridPanel.panels.set(table, new DbGridPanel(db, extensionUri, table, panel, filter));
 	}
@@ -36,7 +36,7 @@ export class DbGridPanel implements vscode.Disposable {
 					void DbGridPanel.show(this.db, this.extensionUri, msg.table, msg.key)
 						.catch((e: Error) => vscode.window.showErrorMessage(e.message));
 				} else if (msg.type === 'updateSchema') {
-					void vscode.commands.executeCommand('twdev.updateDbSchema');
+					void vscode.commands.executeCommand('totalwar.updateDbSchema');
 				}
 			}),
 			db.onDidChange(() => void this.load()),

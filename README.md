@@ -15,7 +15,7 @@ An unofficial community tool, not affiliated with Creative Assembly or SEGA.
 | `extension/` | The VS Code extension (TypeScript). `src/adapter/` is the debug adapter; it runs in the extension host (`DebugAdapterInlineImplementation`) and has no `vscode` dependency. |
 | `debuggee/` | The in-game half: a mod with `script/_lib/mod/vscode-debuggee.lua` and bootstraps for frontend, campaign and battle. Shipped inside the extension; every debug session packs it into `<game>/data/tw_lua_debugger.pack` (`extension/src/installMod.ts`). |
 | `rpfm-interface/` | Rust (napi-rs) bindings to `rpfm_lib`, used to read packs and DB tables and to build packs. |
-| `steam-helper/` | Rust helper that subscribes to and downloads Steam Workshop items that `pack` task dependencies need. |
+| `steam-helper/` | Rust helper that subscribes to and downloads Steam Workshop items that `totalwar-pack` task dependencies need. |
 | `example/` | The example mod project. Shipped in the extension and copied (renamed, pointed at the user's game) by **TotalWar: Create Mod Project…**; `Run Extension` opens it. |
 
 ## How it works

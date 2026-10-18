@@ -9,7 +9,7 @@ import { profileHtml, ProfileResult } from './profileView';
 
 /**
  * The Total War debug session the game is connected to, and its environment
- * (frontend, campaign, battle). Sets the `twdev.gameEnv` context key.
+ * (frontend, campaign, battle). Sets the `totalwar.gameEnv` context key.
  */
 class GameConnection implements vscode.Disposable {
 	private session: vscode.DebugSession | undefined;
@@ -27,7 +27,7 @@ class GameConnection implements vscode.Disposable {
 				if (e.event === CONNECTED_EVENT) {
 					this.session = e.session;
 					this.envName = String(e.body?.env ?? 'unknown');
-					void vscode.commands.executeCommand('setContext', 'twdev.gameEnv', this.envName);
+					void vscode.commands.executeCommand('setContext', 'totalwar.gameEnv', this.envName);
 					this.changed.fire();
 				} else if (e.event === SCRIPT_EVENT) {
 					onScriptEvent(e.body as ScriptEventBody);
@@ -37,7 +37,7 @@ class GameConnection implements vscode.Disposable {
 				if (s === this.session) {
 					this.session = undefined;
 					this.envName = undefined;
-					void vscode.commands.executeCommand('setContext', 'twdev.gameEnv', undefined);
+					void vscode.commands.executeCommand('setContext', 'totalwar.gameEnv', undefined);
 					this.changed.fire();
 				}
 			}),
@@ -229,7 +229,7 @@ export class GameTools implements vscode.Disposable {
 	constructor(private readonly db: DbService, private readonly extensionUri: vscode.Uri) {
 		this.game = new GameConnection((e) => this.onScriptEvent(e));
 		this.campaign = new CampaignTreeProvider(this.game);
-		const view = vscode.window.createTreeView('twdev.campaignView', { treeDataProvider: this.campaign });
+		const view = vscode.window.createTreeView('totalwar.campaignView', { treeDataProvider: this.campaign });
 		const cmd = (id: string, fn: (...args: never[]) => unknown) => vscode.commands.registerCommand(id, async (...args: never[]) => {
 			try {
 				await fn(...args);
@@ -242,21 +242,21 @@ export class GameTools implements vscode.Disposable {
 			this.game.onDidChange(() => {
 				if (!this.game.env) {
 					this.monitoring = false;
-					void vscode.commands.executeCommand('setContext', 'twdev.monitoringEvents', false);
+					void vscode.commands.executeCommand('setContext', 'totalwar.monitoringEvents', false);
 				}
 			}),
-			cmd('twdev.toggleEventMonitor', () => this.toggleMonitor()),
-			cmd('twdev.refreshCampaign', () => this.campaign.refresh()),
-			cmd('twdev.campaign.addMoney', (node: Node) => this.addMoney(node)),
-			cmd('twdev.campaign.applyEffectBundle', (node: Node) => this.applyEffectBundle(node)),
-			cmd('twdev.campaign.giveRegion', (node: Node) => this.giveRegion(node)),
-			cmd('twdev.campaign.killCharacter', (node: Node) => this.killCharacter(node)),
-			cmd('twdev.campaign.addLevels', (node: Node) => this.addLevels(node)),
-			cmd('twdev.campaign.teleport', (node: Node) => this.teleport(node)),
-			cmd('twdev.runFileInGame', (uri?: vscode.Uri) => this.runFile(uri)),
-			cmd('twdev.runSelectionInGame', () => this.runSelection()),
-			cmd('twdev.startProfiler', () => this.startProfiler()),
-			cmd('twdev.stopProfiler', () => this.stopProfiler()),
+			cmd('totalwar.toggleEventMonitor', () => this.toggleMonitor()),
+			cmd('totalwar.refreshCampaign', () => this.campaign.refresh()),
+			cmd('totalwar.campaign.addMoney', (node: Node) => this.addMoney(node)),
+			cmd('totalwar.campaign.applyEffectBundle', (node: Node) => this.applyEffectBundle(node)),
+			cmd('totalwar.campaign.giveRegion', (node: Node) => this.giveRegion(node)),
+			cmd('totalwar.campaign.killCharacter', (node: Node) => this.killCharacter(node)),
+			cmd('totalwar.campaign.addLevels', (node: Node) => this.addLevels(node)),
+			cmd('totalwar.campaign.teleport', (node: Node) => this.teleport(node)),
+			cmd('totalwar.runFileInGame', (uri?: vscode.Uri) => this.runFile(uri)),
+			cmd('totalwar.runSelectionInGame', () => this.runSelection()),
+			cmd('totalwar.startProfiler', () => this.startProfiler()),
+			cmd('totalwar.stopProfiler', () => this.stopProfiler()),
 			vscode.workspace.onDidSaveTextDocument((doc) => this.onSave(doc)),
 		);
 	}
@@ -267,11 +267,11 @@ export class GameTools implements vscode.Disposable {
 		const on = !this.monitoring;
 		const r = await this.game.request<{ on: boolean; available: boolean }>('tw/monitorEvents', { on });
 		this.monitoring = r.on;
-		void vscode.commands.executeCommand('setContext', 'twdev.monitoringEvents', r.on);
+		void vscode.commands.executeCommand('setContext', 'totalwar.monitoringEvents', r.on);
 		if (on) {
 			this.events.show(true);
 			this.events.appendLine(r.available
-				? `--- Monitoring script events (${this.game.env}). Filter with twdev.eventMonitor.exclude. ---`
+				? `--- Monitoring script events (${this.game.env}). Filter with totalwar.eventMonitor.exclude. ---`
 				: '--- The game has no script core yet; events show once it has. ---');
 		} else {
 			this.events.appendLine('--- Stopped. ---');
@@ -286,7 +286,7 @@ export class GameTools implements vscode.Disposable {
 			this.events.appendLine(`… ${e.count} more events in the last second not shown`);
 			return;
 		}
-		const exclude = vscode.workspace.getConfiguration('twdev').get<string[]>('eventMonitor.exclude', []);
+		const exclude = vscode.workspace.getConfiguration('totalwar').get<string[]>('eventMonitor.exclude', []);
 		if (exclude.some((p) => matchesName(p, e.name))) {
 			return;
 		}
@@ -404,10 +404,10 @@ export class GameTools implements vscode.Disposable {
 		vscode.debug.activeDebugConsole.appendLine(`> ${text.trim().split('\n')[0]}${value !== undefined && value !== null ? `\n${JSON.stringify(value, null, 2)}` : ''}`);
 	}
 
-	/** Hot reload: a saved mod script runs again in the game (`twdev.hotReload`). */
+	/** Hot reload: a saved mod script runs again in the game (`totalwar.hotReload`). */
 	private onSave(doc: vscode.TextDocument): void {
 		if (doc.languageId !== 'lua' || doc.uri.scheme !== 'file' || !this.game.env
-			|| !vscode.workspace.getConfiguration('twdev').get<boolean>('hotReload', false)
+			|| !vscode.workspace.getConfiguration('totalwar').get<boolean>('hotReload', false)
 			|| !vscode.workspace.getWorkspaceFolder(doc.uri) || !chunkNameFor(doc.uri.fsPath)) {
 			return;
 		}
@@ -418,16 +418,16 @@ export class GameTools implements vscode.Disposable {
 
 	private async startProfiler(): Promise<void> {
 		const r = await this.game.request<{ interval: number }>('tw/profileStart', {
-			interval: vscode.workspace.getConfiguration('twdev').get<number>('profiler.interval', 5000),
+			interval: vscode.workspace.getConfiguration('totalwar').get<number>('profiler.interval', 5000),
 		});
-		void vscode.commands.executeCommand('setContext', 'twdev.profiling', true);
+		void vscode.commands.executeCommand('setContext', 'totalwar.profiling', true);
 		void vscode.window.showInformationMessage(`Profiling the game's scripts (a sample every ${r.interval} Lua instructions). Run "TotalWar: Stop Profiler" to see where the time goes.`);
 	}
 
 	private async stopProfiler(): Promise<void> {
 		const result = await this.game.request<ProfileResult>('tw/profileStop');
-		void vscode.commands.executeCommand('setContext', 'twdev.profiling', false);
-		const panel = vscode.window.createWebviewPanel('twdev.profile', `Lua profile (${result.total} samples)`, vscode.ViewColumn.Active, { enableScripts: true });
+		void vscode.commands.executeCommand('setContext', 'totalwar.profiling', false);
+		const panel = vscode.window.createWebviewPanel('totalwar.profile', `Lua profile (${result.total} samples)`, vscode.ViewColumn.Active, { enableScripts: true });
 		panel.webview.html = profileHtml(panel.webview, result);
 	}
 

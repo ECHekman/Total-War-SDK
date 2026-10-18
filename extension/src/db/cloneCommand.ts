@@ -139,7 +139,7 @@ function modFile(candidates: string[]): vscode.Uri {
 	if (existing) {
 		return vscode.Uri.file(existing);
 	}
-	const tsv = vscode.workspace.getConfiguration('twdev').get<string>('newTableFormat', 'binary') === 'tsv';
+	const tsv = vscode.workspace.getConfiguration('totalwar').get<string>('newTableFormat', 'binary') === 'tsv';
 	return vscode.Uri.file(candidates.find((c) => c.endsWith('.tsv') === tsv) ?? candidates[0]);
 }
 

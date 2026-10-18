@@ -14,7 +14,7 @@ export interface SourceConfig {
 	game: string;
 }
 
-const STATE_KEY = 'twdev.sourceConfig';
+const STATE_KEY = 'totalwar.sourceConfig';
 /** Top-level folder with the game's own Lua files. */
 export const BASEGAME_FOLDER = '@basegame';
 /** Top-level folder with one sub folder per mod pack, holding only that mod's files. */
@@ -27,13 +27,13 @@ interface PackSource {
 	holder: PackHolder;
 	/** Lua files, for the debugger: lower-case path inside the pack -> path as stored */
 	files: Map<string, string>;
-	/** Its folders as listed (`twdev.virtualFiles.exclude` applied). */
+	/** Its folders as listed (`totalwar.virtualFiles.exclude` applied). */
 	tree: DirTree;
 }
 
-/** Glob patterns of pack files to leave out of the listing (setting `twdev.virtualFiles.exclude`). */
+/** Glob patterns of pack files to leave out of the listing (setting `totalwar.virtualFiles.exclude`). */
 export function virtualFilesExclude(): string[] {
-	return vscode.workspace.getConfiguration('twdev').get<string[]>('virtualFiles.exclude', []);
+	return vscode.workspace.getConfiguration('totalwar').get<string[]>('virtualFiles.exclude', []);
 }
 export const VIRTUAL_ROOT = vscode.Uri.from({ scheme: VIRTUAL_SCHEME, path: '/' });
 
@@ -46,7 +46,7 @@ class Entry implements vscode.FileStat {
 }
 
 /**
- * Read-only `twsource:` file system with every file of the game's packs and
+ * Read-only `totalwar:` file system with every file of the game's packs and
  * of the mods in the mod list (DB tables open in the DB table editor; other
  * files in whatever editor handles their type), each in its own folder:
  * - `@basegame/` the game's own packs;
@@ -185,7 +185,7 @@ export class LiveSourceFS implements vscode.FileSystemProvider, VirtualSources, 
 	}
 
 	/**
-	 * Lists the files again with the current `twdev.virtualFiles.exclude`
+	 * Lists the files again with the current `totalwar.virtualFiles.exclude`
 	 * (the packs stay open). Folders left without files disappear.
 	 */
 	async refilter(): Promise<void> {
@@ -270,7 +270,7 @@ export class LiveSourceFS implements vscode.FileSystemProvider, VirtualSources, 
 	}
 
 	private async detectedConfig(): Promise<SourceConfig | undefined> {
-		const game = gameByKey(vscode.workspace.getConfiguration('twdev').get<string>('game'));
+		const game = gameByKey(vscode.workspace.getConfiguration('totalwar').get<string>('game'));
 		const exe = await findGameExecutable(game);
 		if (!exe) {
 			return undefined;

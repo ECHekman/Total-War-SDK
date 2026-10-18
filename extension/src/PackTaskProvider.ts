@@ -8,7 +8,7 @@ import { addModToList, writeModList } from './modList';
 import { DbSchema, rpfm } from './rpfm';
 import { WorkshopCache, WorkshopItem, cachedWorkshopClient, steamHelperPath, steamWorkshopClient, workshopClosure } from './workshop';
 
-export const PACK_TASK_TYPE = 'pack';
+export const PACK_TASK_TYPE = 'totalwar-pack';
 
 interface PackTaskDefinition extends vscode.TaskDefinition {
 	packfilesDirectory: string;
@@ -21,7 +21,7 @@ interface PackTaskDefinition extends vscode.TaskDefinition {
 	dependencies?: DependencySpec[];
 }
 
-/** `pack` tasks: build a .pack from a workspace folder and install it into the game. */
+/** `totalwar-pack` tasks: build a .pack from a workspace folder and install it into the game. */
 export class PackTaskProvider implements vscode.TaskProvider {
 	constructor(private readonly extensionPath: string, private readonly state?: vscode.Memento,
 		private readonly schema?: () => Promise<DbSchema>) {}
@@ -85,7 +85,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 			modName += '.pack';
 		}
 		const game = def.game
-			?? vscode.workspace.getConfiguration('twdev').get<string>('game')
+			?? vscode.workspace.getConfiguration('totalwar').get<string>('game')
 			?? gameForExecutable(def.executable)?.key
 			?? DEFAULT_GAME;
 
@@ -175,7 +175,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 	 */
 	private async prepareWorkshopItems(declared: DependencySpec[], game: GameDefinition, modName: string): Promise<string[]> {
 		const ids = declared.filter((s): s is string => typeof s === 'string' && /^\d+$/.test(s.trim())).map((s) => s.trim());
-		const config = vscode.workspace.getConfiguration('twdev');
+		const config = vscode.workspace.getConfiguration('totalwar');
 		const mode = config.get<'ask' | 'always' | 'never'>('autoSubscribeDependencies', 'ask');
 		const helper = steamHelperPath(this.extensionPath);
 		const steamapps = steamappsFolder(this.def.executable);
@@ -268,7 +268,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 	}
 }
 
-const WORKSHOP_CACHE_KEY = 'twdev.workshopItems';
+const WORKSHOP_CACHE_KEY = 'totalwar.workshopItems';
 
 function mementoCache(state: vscode.Memento): WorkshopCache {
 	type Entry = WorkshopItem & { at: number };
