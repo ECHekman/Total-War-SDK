@@ -4,7 +4,7 @@ version = "2.0.0"
 authors = ["Fietspompje"]
 edition = "2021"
 license = "MIT"
-description = "Subscribes to and downloads Steam Workshop items for the TW Lua Debugger VS Code extension"
+description = "Subscribes to and downloads Steam Workshop items for the Total War Modding Tools VS Code extension"
 
 [dependencies]
 steamworks = "0.13"

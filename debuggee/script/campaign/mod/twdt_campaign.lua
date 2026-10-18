@@ -1,4 +1,4 @@
--- TW Lua Debugger: campaign bootstrap. Connects the debugger and polls VS Code.
+-- Total War Modding Tools debugger: campaign bootstrap. Connects the debugger and polls VS Code.
 if not debuggee then
 	return
 end

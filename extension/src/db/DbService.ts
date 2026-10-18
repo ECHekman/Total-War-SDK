@@ -179,7 +179,7 @@ export class DbService implements GameDatabase, vscode.Disposable {
 		const packs = await this.sources.packSources();
 		const game = this.sources.game;
 		if (!game || packs.length === 0) {
-			throw new Error('No game packs loaded. Start a Total War debug session (or check the "TW Lua Debugger" output).');
+			throw new Error('No game packs loaded. Start a Total War debug session (or check the "Total War Modding Tools" output).');
 		}
 		const started = Date.now();
 		const schema = await this.schema();

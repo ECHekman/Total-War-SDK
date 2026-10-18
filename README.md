@@ -1,16 +1,21 @@
-# TW Lua Debugger
+# Total War Modding Tools
 
-A VS Code debugger for the Lua 5.1 scripts of Total War: WARHAMMER III. User
-documentation is in [extension/README.md](extension/README.md); this file is
-for working on the debugger itself.
+A VS Code extension for making Total War: WARHAMMER III mods: a debugger for
+the game's Lua 5.1 scripts, the game database and DB/loc editors, mod checks,
+Lua IntelliSense and pack tools. User documentation is in
+[extension/README.md](extension/README.md) (the Marketplace page); this file is
+for working on the extension itself.
+
+An unofficial community tool, not affiliated with Creative Assembly or SEGA.
 
 ## Layout
 
 | Folder | What |
 |---|---|
 | `extension/` | The VS Code extension (TypeScript). `src/adapter/` is the debug adapter; it runs in the extension host (`DebugAdapterInlineImplementation`) and has no `vscode` dependency. |
-| `debuggee/` | The in-game half: a mod with `script/_lib/mod/vscode-debuggee.lua` and bootstraps for frontend, campaign and battle. Shipped inside the extension and on the Steam Workshop. |
-| `rpfm-interface/` | Rust (napi-rs) bindings to `rpfm_lib`, used to read Lua files from packs and to build packs. |
+| `debuggee/` | The in-game half: a mod with `script/_lib/mod/vscode-debuggee.lua` and bootstraps for frontend, campaign and battle. Shipped inside the extension; every debug session packs it into `<game>/data/tw_lua_debugger.pack` (`extension/src/installMod.ts`). |
+| `rpfm-interface/` | Rust (napi-rs) bindings to `rpfm_lib`, used to read packs and DB tables and to build packs. |
+| `steam-helper/` | Rust helper that subscribes to and downloads Steam Workshop items that `pack` task dependencies need. |
 | `example/` | The example mod project. Shipped in the extension and copied (renamed, pointed at the user's game) by **TotalWar: Create Mod Project…**; `Run Extension` opens it. |
 
 ## How it works
@@ -22,6 +27,11 @@ VS Code --DAP (in process)--> TwLuaDebugSession (extension/src/adapter/session.t
                               FileTransport  <-- files -->  vscode-debuggee.lua (in the game)
                               <game folder>/tw_lua_debugger/{session.json,to_game,from_game}
 ```
+
+Before the session starts (after any `preLaunchTask`), the adapter factory in
+`extension.ts` builds the debuggee into the game's `data` folder and, for
+launch, adds it to the mod list file, so the game always runs the debuggee
+that matches the extension.
 
 The game's Lua has no sockets, so both sides append framed JSON
 (`#<byte length>\n<json>`) to two files. `session.json` (with a random nonce)
@@ -115,14 +125,13 @@ The VSIX is platform specific because of the native module.
 ## Releasing
 
 1. Bump `version` in `extension/package.json` and `MOD_VERSION` in
-   `debuggee/script/_lib/mod/vscode-debuggee.lua` to the same value (a unit
-   test fails if they differ; the extension warns users whose installed mod is
-   a different version). Bump `PROTOCOL` in the Lua file and `PROTOCOL_VERSION`
-   in `extension/src/adapter/protocol.ts` only when the message format changes.
+   `debuggee/script/_lib/mod/vscode-debuggee.lua` to the same value. A unit
+   test fails if they differ, and the Debug Console reports a game still
+   running an older debuggee (it was started before the extension updated
+   the pack). Bump `PROTOCOL` in the Lua file and `PROTOCOL_VERSION` in
+   `extension/src/adapter/protocol.ts` only when the message format changes.
 2. Add the changes to `CHANGELOG.md`.
-3. Push a `v<version>` tag. CI builds and tests everything, attaches the VSIX
-   and `tw_lua_debugger.pack` to a GitHub release, and publishes to the
-   Marketplace and Open VSX when the `VSCE_PAT` / `OVSX_PAT` secrets are set.
-4. Update the Steam Workshop mod with that `tw_lua_debugger.pack`, using the
-   game's mod uploader. Keep the file paths inside the pack unchanged so the
-   new version replaces older copies.
+3. Push a `v<version>` tag on `main`. CI builds and tests everything, attaches
+   the VSIX to a GitHub release, and publishes it to the Marketplace
+   (`Fietspompje.total-war-modding-tools`) and Open VSX when the `VSCE_PAT` / `OVSX_PAT`
+   secrets are set.

@@ -2,17 +2,20 @@
 
 ## 2.0.0
 
-A rewrite of the debug adapter. The C# `DebugAdapter.exe` is gone; the adapter
-now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
+The first release of **Total War Modding Tools**, the successor to the TW Lua
+Debugger extension, published as a new extension (`Fietspompje.total-war-modding-tools`).
+The debug adapter was rewritten: the C# `DebugAdapter.exe` is gone, and the
+adapter now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
 
-### Breaking changes
+### Changes from TW Lua Debugger 1.x
 - The debug type is now `tw-lua` (was `lua`, which clashed with other Lua
-  debuggers). The extension offers to update old launch configurations, or run
-  **TotalWar: Migrate Old "lua" Launch Configurations**.
-- The in-game debugger mod speaks a new protocol. Update the Steam Workshop mod
-  or run **TotalWar: Install Debugger Mod into Game**. An old mod is detected
-  and reported in the Debug Console.
-- The `encoding` launch option was removed; messages are always UTF-8.
+  debuggers). Change `"type"` in existing launch configurations; the
+  `encoding` option was removed (messages are always UTF-8).
+- The debugger mod is no longer distributed on the Steam Workshop. Every debug
+  session packs it from the extension into the game's `data` folder and lists
+  it in the mod list (`installDebuggerMod` launch option), so it always matches
+  the extension. Disable or unsubscribe from the old Workshop mod; the Debug
+  Console reports it when it is still active.
 
 ### New
 - **TotalWar: Create Mod Project…** creates a ready-to-debug example mod
@@ -23,8 +26,6 @@ now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
   project's mod list (your mod first, so it wins over its dependencies).
 - The virtual sources merge mods in mod list order (first wins), as the game
   does, instead of RPFM's alphabetical order.
-- `pack` task option `includeDebuggerMod`: installs the debugger mod and lists
-  it in the mod list file before every launch.
 - Launch configurations can ask for a campaign save with the
   `twdev.pickSaveGame` command input (newest first).
 - Conditional breakpoints, hit counts and logpoints.

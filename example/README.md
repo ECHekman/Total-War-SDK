@@ -1,6 +1,6 @@
 # example_mod
 
-A small Total War: WARHAMMER III campaign mod, set up for the TW Lua Debugger.
+A small Total War: WARHAMMER III campaign mod, set up for Total War Modding Tools.
 Create your own copy with **TotalWar: Create Mod Project…** (Command Palette),
 or open this folder's `example_mod.code-workspace` directly.
 
@@ -13,11 +13,13 @@ or open this folder's `example_mod.code-workspace` directly.
 | `.vscode/launch.json` | **Launch into a save** (asks which save), **Launch to the main menu**, **Attach to the running game**. |
 | `.vscode/tasks.json` | **Pack example_mod**: runs before every launch (see below). |
 
-Before each launch the pack task:
+Before each launch:
 
-1. packs `pack/` into `out/example_mod.pack` and copies it into the game's `data` folder;
-2. installs the debugger mod (`tw_lua_debugger.pack`) from the extension;
-3. lists both in `example_mod_mods.txt` next to the game executable.
+1. the pack task packs `pack/` into `out/example_mod.pack`, copies it into the
+   game's `data` folder and lists it in `example_mod_mods.txt` next to the game
+   executable;
+2. the debug session installs the debugger mod (`tw_lua_debugger.pack`) from
+   the extension and adds it to `example_mod_mods.txt`.
 
 The game is started with that mod list, so only the debugger and this mod are
 loaded. Your `used_mods.txt` and the official launcher are not involved.
@@ -29,8 +31,8 @@ somewhere else (**Create Mod Project** fills it in for you).
 List them under `"dependencies"` in `.vscode/tasks.json` (there is a commented
 example): Workshop item ids, pack names or paths, or another project folder of
 yours. Before every launch the task then writes `example_mod_mods.txt`
-completely: this mod first, the debugger mod, then the dependencies in the order
-listed. In Total War the mod listed first wins when two mods contain the same
+completely: this mod first, then the dependencies in the order listed (the
+debug session adds the debugger mod after that). In Total War the mod listed first wins when two mods contain the same
 file, so this mod can override its dependencies.
 
 A dependency you develop yourself (`{ "folder": ..., "modName": ... }`) is

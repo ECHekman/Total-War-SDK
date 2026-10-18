@@ -337,7 +337,7 @@ export class LiveSourceFS implements vscode.FileSystemProvider, VirtualSources, 
 		const name = (folder: string) => folder.slice(folder.lastIndexOf('/') + 1);
 		switch (at?.kind) {
 			case 'root': {
-				// Empty when the game was not found or the packs did not load (see the "TW Lua Debugger" output).
+				// Empty when the game was not found or the packs did not load (see the "Total War Modding Tools" output).
 				const top = new Set(this.sources.map((s) => s.folder.split('/')[0]));
 				return [...top].sort().map((f) => [f, vscode.FileType.Directory]);
 			}

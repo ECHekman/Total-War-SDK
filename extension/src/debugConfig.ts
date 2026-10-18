@@ -6,7 +6,6 @@ import { DEFAULT_GAME, gameByKey, gameForExecutable } from './games';
 import { findGameExecutable } from './steam';
 
 export const DEBUG_TYPE = 'tw-lua';
-const LEGACY_TYPE = 'lua';
 
 function configuredGame(): string {
 	return vscode.workspace.getConfiguration('twdev').get<string>('game') ?? DEFAULT_GAME;
@@ -66,66 +65,5 @@ export class TwDebugConfigurationProvider implements vscode.DebugConfigurationPr
 		}
 		this.onResolved(config);
 		return config;
-	}
-}
-
-// ---- migration from 1.x ("type": "lua") -------------------------------------
-
-interface LegacyLaunch {
-	folder: vscode.WorkspaceFolder;
-	configurations: vscode.DebugConfiguration[];
-}
-
-function isLegacy(c: vscode.DebugConfiguration): boolean {
-	return c?.type === LEGACY_TYPE && typeof c.executable === 'string' && 'modListFile' in c;
-}
-
-export function findLegacyConfigurations(): LegacyLaunch[] {
-	const result: LegacyLaunch[] = [];
-	for (const folder of vscode.workspace.workspaceFolders ?? []) {
-		const configurations = vscode.workspace.getConfiguration('launch', folder.uri).get<vscode.DebugConfiguration[]>('configurations') ?? [];
-		if (configurations.some(isLegacy)) {
-			result.push({ folder, configurations });
-		}
-	}
-	return result;
-}
-
-export function migrateConfiguration(c: vscode.DebugConfiguration): vscode.DebugConfiguration {
-	if (!isLegacy(c)) {
-		return c;
-	}
-	const migrated: vscode.DebugConfiguration = { ...c, type: DEBUG_TYPE };
-	delete migrated.encoding; // the new protocol is always UTF-8
-	return migrated;
-}
-
-export async function migrateLaunchConfigurations(): Promise<number> {
-	let count = 0;
-	for (const { folder, configurations } of findLegacyConfigurations()) {
-		const updated = configurations.map((c) => {
-			if (isLegacy(c)) {
-				count++;
-			}
-			return migrateConfiguration(c);
-		});
-		await vscode.workspace.getConfiguration('launch', folder.uri).update('configurations', updated, vscode.ConfigurationTarget.WorkspaceFolder);
-	}
-	return count;
-}
-
-export async function offerMigration(state: vscode.Memento): Promise<void> {
-	const legacy = findLegacyConfigurations();
-	if (!legacy.length || state.get('twdev.migrationDismissed')) {
-		return;
-	}
-	const choice = await vscode.window.showInformationMessage(
-		'This workspace has launch configurations for TW Lua Debugger 1.x ("type": "lua"). Version 2 uses "type": "tw-lua". Update them?',
-		'Update', 'Not now', 'Don\'t ask again');
-	if (choice === 'Update') {
-		const n = await migrateLaunchConfigurations();
-		void vscode.window.showInformationMessage(`Updated ${n} launch configuration(s).`);
-	} else if (choice === 'Don\'t ask again') {
-		await state.update('twdev.migrationDismissed', true);
 	}
 }

@@ -4,7 +4,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-import { migrateConfiguration } from '../../../src/debugConfig';
 import { planClone } from '../../../src/db/cloneEntity';
 import { DbTableModel } from '../../../src/db/dbTableModel';
 import type { TwLuaDebuggerApi } from '../../../src/extension';
@@ -18,27 +17,20 @@ const debuggeeRoot = path.resolve(extensionRoot, '..', 'debuggee');
 // Optional: a real game install for the virtual source file test (read only).
 const wh3 = process.env.TW_GAME_DIR ?? 'C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III';
 
-describe('TW Lua Debugger extension', () => {
+describe('Total War Modding Tools extension', () => {
 	let api: TwLuaDebuggerApi;
 
 	before(async () => {
-		const ext = vscode.extensions.getExtension<TwLuaDebuggerApi>('Fietspompje.tw-lua-debug');
+		const ext = vscode.extensions.getExtension<TwLuaDebuggerApi>('Fietspompje.total-war-modding-tools');
 		assert.ok(ext, 'extension not found');
 		api = await ext.activate();
 	});
 
 	it('registers its commands', async () => {
 		const commands = await vscode.commands.getCommands(true);
-		for (const c of ['twdev.sourceFiles', 'twdev.reloadSourceFiles', 'twdev.installDebuggerMod', 'twdev.migrateLaunchConfigs', 'twdev.openDbTable', 'twdev.updateDbSchema', 'twdev.filterVirtualFiles']) {
+		for (const c of ['twdev.sourceFiles', 'twdev.reloadSourceFiles', 'twdev.installDebuggerMod', 'twdev.openDbTable', 'twdev.updateDbSchema', 'twdev.filterVirtualFiles']) {
 			assert.ok(commands.includes(c), `missing ${c}`);
 		}
-	});
-
-	it('migrates 1.x launch configurations', () => {
-		const migrated = migrateConfiguration({ name: 'x', type: 'lua', request: 'launch', executable: 'a.exe', modListFile: 'used_mods.txt', encoding: 'UTF-8' });
-		assert.deepEqual(migrated, { name: 'x', type: 'tw-lua', request: 'launch', executable: 'a.exe', modListFile: 'used_mods.txt' });
-		const other = { name: 'y', type: 'lua', request: 'launch', program: 'main.lua' };
-		assert.equal(migrateConfiguration(other), other);
 	});
 
 	it('serves the Lua files of an installed game as twsource:/', async function () {
@@ -420,7 +412,7 @@ describe('TW Lua Debugger extension', () => {
 		const args = ['"' + path.join(fixtures, 'run_game.lua') + '"', '"' + debuggeeRoot + '"', '"' + fixtures + '"', 'campaign', '40'].join(' ');
 		const ok = await vscode.debug.startDebugging(undefined, {
 			name: 'fake game', type: 'tw-lua', request: 'launch',
-			executable: lua, modListFile: '', arguments: args, sourceFilesPath: fixtures,
+			executable: lua, modListFile: '', arguments: args, sourceFilesPath: fixtures, installDebuggerMod: false,
 		});
 		assert.ok(ok, 'debug session did not start');
 

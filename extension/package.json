@@ -1,29 +1,37 @@
 {
-	"name": "tw-lua-debug",
-	"displayName": "TW Lua Debugger",
+	"name": "total-war-modding-tools",
+	"displayName": "Total War Modding Tools",
 	"version": "2.0.0",
 	"publisher": "Fietspompje",
 	"icon": "images/icon.png",
-	"description": "Debug Total War: Warhammer III Lua 5.1 scripts from Visual Studio Code",
+	"description": "Make Total War: WARHAMMER III mods in VS Code: Lua debugger, DB and loc table editors, game database browser, mod checks, Lua IntelliSense and pack tools. Unofficial.",
 	"license": "MIT",
 	"categories": [
 		"Debuggers",
+		"Programming Languages",
+		"Linters",
 		"Other"
 	],
 	"keywords": [
 		"lua",
 		"Total War",
 		"Warhammer",
-		"Rome",
-		"Three Kingdoms"
+		"Warhammer 3",
+		"modding",
+		"rpfm",
+		"pack"
 	],
 	"author": {
 		"name": "Fietspompje"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ECHekman/tw_lua_debugger.git"
+		"url": "https://github.com/ECHekman/Total-War-SDK.git"
 	},
+	"bugs": {
+		"url": "https://github.com/ECHekman/Total-War-SDK/issues"
+	},
+	"homepage": "https://github.com/ECHekman/Total-War-SDK#readme",
 	"engines": {
 		"vscode": "^1.90.0"
 	},
@@ -74,11 +82,6 @@
 			{
 				"command": "twdev.installDebuggerMod",
 				"title": "Install Debugger Mod into Game",
-				"category": "TotalWar"
-			},
-			{
-				"command": "twdev.migrateLaunchConfigs",
-				"title": "Migrate Old \"lua\" Launch Configurations",
 				"category": "TotalWar"
 			},
 			{
@@ -435,14 +438,9 @@
 						"description": "Name of the used mod list file.",
 						"default": "used_mods.txt"
 					},
-					"includeDebuggerMod": {
-						"type": "boolean",
-						"description": "Also install the debugger mod shipped with the extension and add it to the mod list file.",
-						"default": false
-					},
 					"dependencies": {
 						"type": "array",
-						"description": "Mods this mod needs. When set, the task writes the whole mod list file (modListFile): these mods, the debugger mod (includeDebuggerMod) and this mod, with this mod taking priority. Do not point modListFile at used_mods.txt.",
+						"description": "Mods this mod needs. When set, the task writes the whole mod list file (modListFile): this mod and these mods, with this mod taking priority. Debug sessions add the debugger mod themselves. Do not point modListFile at used_mods.txt.",
 						"items": {
 							"anyOf": [
 								{
@@ -476,7 +474,7 @@
 		],
 		"configuration": {
 			"id": "twdev",
-			"title": "TW Lua Debugger",
+			"title": "Total War Modding Tools",
 			"properties": {
 				"twdev.game": {
 					"type": "string",
@@ -690,6 +688,11 @@
 								"description": "Folder with your Lua sources (the folder that contains 'script'). Searched before the workspace and the virtual source files.",
 								"default": "${workspaceFolder}/pack"
 							},
+							"installDebuggerMod": {
+								"type": "boolean",
+								"description": "Before starting the game, build the debugger mod shipped with the extension into the game's data folder and add it to modListFile.",
+								"default": true
+							},
 							"terminateDebuggee": {
 								"type": "boolean",
 								"description": "Close the game when the debug session is stopped.",
@@ -720,6 +723,11 @@
 								"type": "string",
 								"description": "Mod list file (relative to the executable folder). Used for the virtual source files.",
 								"default": "used_mods.txt"
+							},
+							"installDebuggerMod": {
+								"type": "boolean",
+								"description": "Before attaching, update the debugger mod in the game's data folder (used when the game restarts) and warn when modListFile does not list it.",
+								"default": true
 							},
 							"sourceFilesPath": {
 								"type": "string",

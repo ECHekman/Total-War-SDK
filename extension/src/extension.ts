@@ -10,8 +10,8 @@ import { modConflictReport, ModDiagnostics } from './db/modDiagnostics';
 import { cloneEntityCommand, writePlan } from './db/cloneCommand';
 import type { ClonePlan } from './db/cloneEntity';
 import { DbTreeProvider, tableOf } from './db/DbTreeProvider';
-import { DEBUG_TYPE, gameKeyFor, migrateLaunchConfigurations, offerMigration, TwDebugConfigurationProvider } from './debugConfig';
-import { installDebuggerMod } from './installMod';
+import { DEBUG_TYPE, gameKeyFor, TwDebugConfigurationProvider } from './debugConfig';
+import { installDebuggerMod, prepareDebuggerMod } from './installMod';
 import { isModWorkspace, LuaApiService, offerLuaSetup } from './lua/luaLanguage';
 import { DbKeyLinkProvider, TwLuaCompletionProvider } from './lua/luaProviders';
 import { GameTools } from './runtime/gameTools';
@@ -36,7 +36,7 @@ export interface TwLuaDebuggerApi {
 }
 
 export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
-	const log = vscode.window.createOutputChannel('TW Lua Debugger');
+	const log = vscode.window.createOutputChannel('Total War Modding Tools');
 	const sources = new LiveSourceFS(context.workspaceState, log);
 	const db = new DbService(sources, () => ({
 		setting: vscode.workspace.getConfiguration('twdev').get<string>('dbSchemaPath') || undefined,
@@ -68,14 +68,18 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		}, vscode.DebugConfigurationProviderTriggerKind.Dynamic),
 
 		vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, {
-			createDebugAdapterDescriptor: () => new vscode.DebugAdapterInlineImplementation(new TwLuaDebugSession({
-				workspaceFolders: () => (vscode.workspace.workspaceFolders ?? [])
-					.filter((f) => f.uri.scheme === 'file')
-					.map((f) => f.uri.fsPath),
-				virtualSources: sources,
-				database: db,
-				modVersion: String(context.extension.packageJSON.version),
-			})),
+			// Called after the preLaunchTask, so the mod list it may have written is final.
+			createDebugAdapterDescriptor: async (session) => {
+				await prepareDebuggerMod(context.extensionPath, session.configuration, log);
+				return new vscode.DebugAdapterInlineImplementation(new TwLuaDebugSession({
+					workspaceFolders: () => (vscode.workspace.workspaceFolders ?? [])
+						.filter((f) => f.uri.scheme === 'file')
+						.map((f) => f.uri.fsPath),
+					virtualSources: sources,
+					database: db,
+					modVersion: String(context.extension.packageJSON.version),
+				}));
+			},
 		}),
 
 		vscode.debug.onDidStartDebugSession((session) => {
@@ -165,13 +169,8 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		vscode.commands.registerCommand('twdev.installDebuggerMod', () => installDebuggerMod(context)),
 		vscode.commands.registerCommand('twdev.createModProject', () => createModProject(context)),
 		vscode.commands.registerCommand('twdev.pickSaveGame', () => pickSaveGame()),
-		vscode.commands.registerCommand('twdev.migrateLaunchConfigs', async () => {
-			const n = await migrateLaunchConfigurations();
-			void vscode.window.showInformationMessage(n ? `Updated ${n} launch configuration(s) to "tw-lua".` : 'No "lua" launch configurations to update.');
-		}),
 	);
 
-	void offerMigration(context.workspaceState);
 	void offerLuaSetup(context.workspaceState, luaApi);
 	if (isModWorkspace()) {
 		modDiagnostics.schedule(5000);

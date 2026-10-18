@@ -1,4 +1,4 @@
-//! Node.js bindings to rpfm_lib used by the TW Lua Debugger VS Code extension:
+//! Node.js bindings to rpfm_lib used by the Total War Modding Tools VS Code extension:
 //! reading Lua files out of the game's pack files and building mod packs.
 
 #![deny(clippy::all)]
