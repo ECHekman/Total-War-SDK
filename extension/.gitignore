@@ -1,0 +1,13 @@
+node_modules/
+dist/
+out-test/
+native/
+schemas/
+debuggee/
+example/
+.vscode-test/
+*.vsix
+.tools/
+# copied from the repository root by esbuild.mjs
+LICENSE.txt
+NOTICE-vscode-mono-debug.txt

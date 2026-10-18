@@ -1,0 +1,12 @@
+{
+  "name": "rpfm-interface",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Node.js bindings to rpfm_lib for the TW Lua Debugger extension",
+  "main": "rpfm-interface.win32-x64-msvc.node",
+  "types": "rpfm-interface.d.ts",
+  "scripts": {
+    "build": "cargo build --release && node scripts/copy-artifact.mjs release",
+    "build:debug": "cargo build && node scripts/copy-artifact.mjs debug"
+  }
+}

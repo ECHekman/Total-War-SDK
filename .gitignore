@@ -1,0 +1,6 @@
+# Build output and dependencies are ignored per package
+# (see extension/.gitignore and rpfm-interface/.gitignore).
+*.vsix
+*.zip
+.vs/
+.tmp

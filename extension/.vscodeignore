@@ -1,0 +1,15 @@
+**
+!dist/extension.js
+!native/*.node
+!native/*.exe
+!native/*.dll
+!schemas/*.ron
+!media/**
+!debuggee/**
+!images/icon.png
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE.txt
+!NOTICE*.txt
+!example/**

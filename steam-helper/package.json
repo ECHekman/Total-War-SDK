@@ -1,0 +1,10 @@
+{
+  "name": "steam-helper",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Steam Workshop download helper for the TW Lua Debugger extension",
+  "scripts": {
+    "build": "cargo build --release && node scripts/copy-artifact.mjs release",
+    "build:debug": "cargo build && node scripts/copy-artifact.mjs debug"
+  }
+}

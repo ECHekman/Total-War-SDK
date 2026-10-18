@@ -1,0 +1,4 @@
+{
+	"search.exclude": { "dist": true, "out-test": true },
+	"typescript.tsc.autoDetect": "off"
+}

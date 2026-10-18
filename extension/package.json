@@ -1,0 +1,777 @@
+{
+	"name": "tw-lua-debug",
+	"displayName": "TW Lua Debugger",
+	"version": "2.0.0",
+	"publisher": "Fietspompje",
+	"icon": "images/icon.png",
+	"description": "Debug Total War: Warhammer III Lua 5.1 scripts from Visual Studio Code",
+	"license": "MIT",
+	"categories": [
+		"Debuggers",
+		"Other"
+	],
+	"keywords": [
+		"lua",
+		"Total War",
+		"Warhammer",
+		"Rome",
+		"Three Kingdoms"
+	],
+	"author": {
+		"name": "Fietspompje"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ECHekman/tw_lua_debugger.git"
+	},
+	"engines": {
+		"vscode": "^1.90.0"
+	},
+	"main": "./dist/extension.js",
+	"activationEvents": [
+		"onDebugResolve:tw-lua",
+		"onDebugDynamicConfigurations:tw-lua",
+		"onFileSystem:twsource",
+		"onStartupFinished",
+		"onCommand:twdev.pickSaveGame",
+		"onCommand:twdev.createModProject",
+		"onCustomEditor:twdev.dbEditor"
+	],
+	"scripts": {
+		"vscode:prepublish": "npm run build -- --production",
+		"build": "node esbuild.mjs",
+		"watch": "node esbuild.mjs --watch",
+		"typecheck": "tsc -p ./ --noEmit",
+		"lint": "eslint src",
+		"compile-tests": "tsc -p ./tsconfig.test.json",
+		"test": "npm run compile-tests && mocha --config .mocharc.json",
+		"test:lua": "npm run compile-tests && mocha --config .mocharc.json --grep \"\\[lua\\]\"",
+		"test:vscode": "npm run build && npm run compile-tests && node ./out-test/test/vscode/runTest.js",
+		"package": "vsce package --target win32-x64",
+		"build-lua": "node scripts/build-lua51.mjs"
+	},
+	"dependencies": {
+		"@vscode/debugadapter": "^1.68.0",
+		"@vscode/debugprotocol": "^1.68.0"
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "twdev.createModProject",
+				"title": "Create Mod Project…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.sourceFiles",
+				"title": "Show Virtual Source Files",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.reloadSourceFiles",
+				"title": "Reload Virtual Source Files",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.installDebuggerMod",
+				"title": "Install Debugger Mod into Game",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.migrateLaunchConfigs",
+				"title": "Migrate Old \"lua\" Launch Configurations",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.pickSaveGame",
+				"title": "Pick a Campaign Save",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.openDbTable",
+				"title": "Open DB Table…",
+				"category": "TotalWar",
+				"icon": "$(table)"
+			},
+			{
+				"command": "twdev.filterDbTables",
+				"title": "Filter DB Tables…",
+				"category": "TotalWar",
+				"icon": "$(filter)"
+			},
+			{
+				"command": "twdev.reloadDb",
+				"title": "Reload DB Tables",
+				"category": "TotalWar",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "twdev.updateDbSchema",
+				"title": "Update DB Schema",
+				"category": "TotalWar",
+				"icon": "$(cloud-download)"
+			},
+			{
+				"command": "twdev.newDbTable",
+				"title": "New DB Table…",
+				"category": "TotalWar",
+				"icon": "$(new-file)"
+			},
+			{
+				"command": "twdev.cloneEntity",
+				"title": "Copy Game Entity into the Mod…",
+				"category": "TotalWar",
+				"icon": "$(copy)"
+			},
+			{
+				"command": "twdev.checkMod",
+				"title": "Check Mod DB Tables and Loc Files",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.showModConflicts",
+				"title": "Show Conflicts Between Mods in the Mod List",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.migrateDbTable",
+				"title": "Migrate DB Table to the Game's Version",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.newLocFile",
+				"title": "New Loc File…",
+				"category": "TotalWar",
+				"icon": "$(new-file)"
+			},
+			{
+				"command": "twdev.configureLuaLanguageServer",
+				"title": "Set Up Lua IntelliSense",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.filterVirtualFiles",
+				"title": "Filter Virtual Files…",
+				"category": "TotalWar",
+				"icon": "$(filter)"
+			},
+			{
+				"command": "twdev.toggleEventMonitor",
+				"title": "Start/Stop Event Monitor",
+				"category": "TotalWar",
+				"icon": "$(pulse)"
+			},
+			{
+				"command": "twdev.refreshCampaign",
+				"title": "Refresh Campaign",
+				"category": "TotalWar",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "twdev.campaign.addMoney",
+				"title": "Add Money…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.campaign.applyEffectBundle",
+				"title": "Apply Effect Bundle…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.campaign.giveRegion",
+				"title": "Give to Faction…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.campaign.killCharacter",
+				"title": "Kill",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.campaign.addLevels",
+				"title": "Add Levels…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.campaign.teleport",
+				"title": "Teleport…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.runFileInGame",
+				"title": "Run File in the Game",
+				"category": "TotalWar",
+				"icon": "$(run)"
+			},
+			{
+				"command": "twdev.runSelectionInGame",
+				"title": "Run Selection in the Game",
+				"category": "TotalWar"
+			},
+			{
+				"command": "twdev.startProfiler",
+				"title": "Start Profiler",
+				"category": "TotalWar",
+				"icon": "$(dashboard)"
+			},
+			{
+				"command": "twdev.stopProfiler",
+				"title": "Stop Profiler and Show Results",
+				"category": "TotalWar",
+				"icon": "$(debug-stop)"
+			}
+		],
+		"views": {
+			"debug": [
+				{
+					"id": "twdev.dbView",
+					"name": "Game Database",
+					"icon": "$(database)",
+					"contextualTitle": "Total War DB (effective values for the mod list)"
+				},
+				{
+					"id": "twdev.campaignView",
+					"name": "Campaign",
+					"icon": "$(globe)",
+					"when": "twdev.gameEnv",
+					"contextualTitle": "Total War campaign (live from the game)"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "twdev.dbView",
+				"contents": "The effective DB tables (game + mod list) appear here once the game is known. Start a Total War debug session, or set up the game first.\n[Open DB Table…](command:twdev.openDbTable)"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "twdev.filterDbTables",
+					"when": "view == twdev.dbView",
+					"group": "navigation@1"
+				},
+				{
+					"command": "twdev.openDbTable",
+					"when": "view == twdev.dbView",
+					"group": "navigation@2"
+				},
+				{
+					"command": "twdev.reloadDb",
+					"when": "view == twdev.dbView",
+					"group": "navigation@3"
+				},
+				{
+					"command": "twdev.updateDbSchema",
+					"when": "view == twdev.dbView",
+					"group": "more"
+				},
+				{
+					"command": "twdev.refreshCampaign",
+					"when": "view == twdev.campaignView",
+					"group": "navigation@1"
+				},
+				{
+					"command": "twdev.toggleEventMonitor",
+					"when": "view == twdev.campaignView",
+					"group": "navigation@2"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "twdev.cloneEntity",
+					"when": "view == twdev.dbView",
+					"group": "inline"
+				},
+				{
+					"command": "twdev.campaign.addMoney",
+					"when": "view == twdev.campaignView && viewItem == faction"
+				},
+				{
+					"command": "twdev.campaign.applyEffectBundle",
+					"when": "view == twdev.campaignView && viewItem == faction"
+				},
+				{
+					"command": "twdev.campaign.addLevels",
+					"when": "view == twdev.campaignView && viewItem == character"
+				},
+				{
+					"command": "twdev.campaign.teleport",
+					"when": "view == twdev.campaignView && viewItem == character"
+				},
+				{
+					"command": "twdev.campaign.killCharacter",
+					"when": "view == twdev.campaignView && viewItem == character"
+				},
+				{
+					"command": "twdev.campaign.giveRegion",
+					"when": "view == twdev.campaignView && viewItem == region"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "twdev.newDbTable",
+					"when": "explorerResourceIsFolder && resourceScheme == file",
+					"group": "navigation@10"
+				},
+				{
+					"command": "twdev.newLocFile",
+					"when": "explorerResourceIsFolder && resourceScheme == file",
+					"group": "navigation@10"
+				},
+				{
+					"command": "twdev.migrateDbTable",
+					"when": "!explorerResourceIsFolder && resourceScheme == file && resourcePath =~ /[\\\\/]db[\\\\/][^\\\\/]+_tables[\\\\/]/",
+					"group": "navigation@10"
+				},
+				{
+					"command": "twdev.filterVirtualFiles",
+					"when": "explorerResourceIsFolder && resourceScheme == twsource",
+					"group": "navigation@11"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "twdev.runSelectionInGame",
+					"when": "twdev.gameEnv && editorLangId == lua",
+					"group": "navigation@90"
+				},
+				{
+					"command": "twdev.runFileInGame",
+					"when": "twdev.gameEnv && editorLangId == lua",
+					"group": "navigation@91"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "twdev.campaign.addMoney",
+					"when": "false"
+				},
+				{
+					"command": "twdev.campaign.applyEffectBundle",
+					"when": "false"
+				},
+				{
+					"command": "twdev.campaign.giveRegion",
+					"when": "false"
+				},
+				{
+					"command": "twdev.campaign.killCharacter",
+					"when": "false"
+				},
+				{
+					"command": "twdev.campaign.addLevels",
+					"when": "false"
+				},
+				{
+					"command": "twdev.campaign.teleport",
+					"when": "false"
+				},
+				{
+					"command": "twdev.toggleEventMonitor",
+					"when": "twdev.gameEnv"
+				},
+				{
+					"command": "twdev.refreshCampaign",
+					"when": "twdev.gameEnv"
+				},
+				{
+					"command": "twdev.runFileInGame",
+					"when": "twdev.gameEnv"
+				},
+				{
+					"command": "twdev.runSelectionInGame",
+					"when": "twdev.gameEnv"
+				},
+				{
+					"command": "twdev.startProfiler",
+					"when": "twdev.gameEnv"
+				},
+				{
+					"command": "twdev.stopProfiler",
+					"when": "twdev.profiling"
+				}
+			]
+		},
+		"taskDefinitions": [
+			{
+				"type": "pack",
+				"required": [
+					"packfilesDirectory",
+					"modName",
+					"executable"
+				],
+				"properties": {
+					"packfilesDirectory": {
+						"type": "string",
+						"description": "Folder (relative to the workspace) that contains the files to pack into your mod.",
+						"default": "pack"
+					},
+					"modName": {
+						"type": "string",
+						"description": "Name of the packfile, for example my_mod.pack."
+					},
+					"executable": {
+						"type": "string",
+						"description": "Path to the Total War executable, for example C:/Games/steamapps/common/Total War WARHAMMER III/Warhammer3.exe. The pack is installed into its data folder."
+					},
+					"game": {
+						"type": "string",
+						"description": "Game key used to build the pack. Defaults to the twdev.game setting.",
+						"enum": [
+							"warhammer_3",
+							"warhammer_2",
+							"three_kingdoms",
+							"troy",
+							"rome_2"
+						]
+					},
+					"addToUsedMods": {
+						"type": "boolean",
+						"description": "Add the mod to the used mod list file.",
+						"default": true
+					},
+					"modListFile": {
+						"type": "string",
+						"description": "Name of the used mod list file.",
+						"default": "used_mods.txt"
+					},
+					"includeDebuggerMod": {
+						"type": "boolean",
+						"description": "Also install the debugger mod shipped with the extension and add it to the mod list file.",
+						"default": false
+					},
+					"dependencies": {
+						"type": "array",
+						"description": "Mods this mod needs. When set, the task writes the whole mod list file (modListFile): these mods, the debugger mod (includeDebuggerMod) and this mod, with this mod taking priority. Do not point modListFile at used_mods.txt.",
+						"items": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "A Steam Workshop item id (e.g. \"2789857593\", must be subscribed), a pack in the game's data folder (\"some_mod.pack\") or a path to a pack file (\"D:/mods/other_mod.pack\")."
+								},
+								{
+									"type": "object",
+									"description": "A mod you develop: packed from a folder before every launch.",
+									"required": [
+										"folder",
+										"modName"
+									],
+									"properties": {
+										"folder": {
+											"type": "string",
+											"description": "Folder with the mod's files (like this project's packfilesDirectory), relative to the workspace."
+										},
+										"modName": {
+											"type": "string",
+											"description": "Pack name, e.g. other_mod.pack."
+										}
+									}
+								}
+							]
+						},
+						"default": []
+					}
+				}
+			}
+		],
+		"configuration": {
+			"id": "twdev",
+			"title": "TW Lua Debugger",
+			"properties": {
+				"twdev.game": {
+					"type": "string",
+					"default": "warhammer_3",
+					"enum": [
+						"warhammer_3",
+						"warhammer_2",
+						"three_kingdoms",
+						"troy",
+						"rome_2"
+					],
+					"enumDescriptions": [
+						"Total War: WARHAMMER III",
+						"Total War: WARHAMMER II (experimental)",
+						"Total War: THREE KINGDOMS (experimental)",
+						"A Total War Saga: TROY (experimental)",
+						"Total War: ROME II (experimental)"
+					],
+					"description": "Game used to read and build pack files."
+				},
+				"twdev.addVirtualFolderOnDebug": {
+					"type": "boolean",
+					"default": true,
+					"description": "In multi-root workspaces, add the \"Virtual TW Source Files\" folder (the Lua files inside the game's packs) when a debug session starts. In a single folder window use the \"TotalWar: Show Virtual Source Files\" command."
+				},
+				"twdev.dbSchemaPath": {
+					"type": "string",
+					"default": "",
+					"markdownDescription": "RPFM schema used to decode DB tables: a `schema_<game>.ron` file, or a folder with them (e.g. RPFM's `schemas` folder). Empty: download it from rpfm-schemas (refreshed daily), falling back to the copy shipped with the extension."
+				},
+				"twdev.dbHover": {
+					"type": "string",
+					"default": "debugging",
+					"enum": [
+						"debugging",
+						"always",
+						"off"
+					],
+					"enumDescriptions": [
+						"Only while a Total War debug session runs.",
+						"Whenever a Lua file is open.",
+						"Never."
+					],
+					"description": "Hovering a string in Lua that is a DB key (unit, building, effect, ...) shows its effective row."
+				},
+				"twdev.autoSubscribeDependencies": {
+					"type": "string",
+					"default": "ask",
+					"enum": [
+						"ask",
+						"always",
+						"never"
+					],
+					"enumDescriptions": [
+						"Ask before subscribing.",
+						"Subscribe without asking.",
+						"Never: a missing Workshop dependency stops the launch with a link to subscribe yourself."
+					],
+					"markdownDescription": "When a `pack` task's Workshop dependencies (or the items they require) are not downloaded, subscribe to them through Steam and wait for the download. Steam must be running."
+				},
+				"twdev.newTableFormat": {
+					"type": "string",
+					"default": "binary",
+					"enum": [
+						"binary",
+						"tsv"
+					],
+					"enumDescriptions": [
+						"The binary file the game reads, as RPFM writes it.",
+						"RPFM's TSV text format (`<name>.tsv`): readable diffs and merges in git. The pack task converts it to binary."
+					],
+					"markdownDescription": "Format of DB tables and loc files made with **New DB Table…** and **New Loc File…**. Both open in the same editor."
+				},
+				"twdev.modDiagnostics": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "In mod projects, check the DB tables and loc files in the workspace and list problems in the Problems view: tables of an older version than the game's, references to keys that do not exist, repeated keys, new rows without loc text. **TotalWar: Check Mod DB Tables and Loc Files** checks now."
+				},
+				"twdev.dbCompletion": {
+					"type": "boolean",
+					"default": true,
+					"description": "In Lua strings, complete DB keys (units, buildings, effects, ...) and make known keys Ctrl+clickable to open their row. Indexes all DB tables of the game and mod list once, in the background."
+				},
+				"twdev.virtualFiles.exclude": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"markdownDescription": "Files of the game's and the mods' packs to leave out of **Virtual TW Source Files**: glob patterns relative to a pack, any case (`audio`, `*.wem`, `ui/skins/**`, `**/*.{anim,meta}`). A pattern without `/` matches a name in any folder; a folder hides everything in it. Folders left empty are not shown. Hidden files still open from the debugger and links. **TotalWar: Filter Virtual Files…** sets this by kind of file."
+				},
+				"twdev.hotReload": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "While the game is connected, run a mod script again in the game when you save it. Listeners it adds are added again: guard them (`core:remove_listener` first) or use this for scripts that only define functions."
+				},
+				"twdev.eventMonitor.exclude": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"UITrigger",
+						"ScriptEventPendingBattle*",
+						"ComponentMouse*",
+						"ShortcutTriggered",
+						"CampaignEffectsBundleAwarded"
+					],
+					"markdownDescription": "Script events the **TotalWar: Start/Stop Event Monitor** leaves out of the `TW Script Events` output (names, `*` matches anything)."
+				},
+				"twdev.profiler.interval": {
+					"type": "number",
+					"default": 5000,
+					"minimum": 100,
+					"markdownDescription": "The profiler records the Lua call stack every this many Lua VM instructions. Smaller is more precise and slows the game more."
+				}
+			}
+		},
+		"breakpoints": [
+			{
+				"language": "lua"
+			}
+		],
+		"debuggers": [
+			{
+				"type": "tw-lua",
+				"label": "Total War Lua",
+				"languages": [
+					"lua"
+				],
+				"initialConfigurations": [
+					{
+						"name": "Launch Total War",
+						"type": "tw-lua",
+						"request": "launch",
+						"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
+						"modListFile": "used_mods.txt"
+					},
+					{
+						"name": "Attach to Total War",
+						"type": "tw-lua",
+						"request": "attach",
+						"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe"
+					}
+				],
+				"configurationSnippets": [
+					{
+						"label": "Total War: Launch",
+						"description": "Start the game with the Lua debugger attached",
+						"body": {
+							"name": "Launch Total War",
+							"type": "tw-lua",
+							"request": "launch",
+							"executable": "^\"C:/Games/steamapps/common/Total War WARHAMMER III/Warhammer3.exe\"",
+							"modListFile": "used_mods.txt"
+						}
+					},
+					{
+						"label": "Total War: Launch into a save game",
+						"description": "Start the game, skip the frontend and load a campaign save",
+						"body": {
+							"name": "Launch Total War (load save)",
+							"type": "tw-lua",
+							"request": "launch",
+							"executable": "^\"C:/Games/steamapps/common/Total War WARHAMMER III/Warhammer3.exe\"",
+							"modListFile": "used_mods.txt",
+							"arguments": "^\"game_startup_mode campaign_load \\\"${1:My Save.save}\\\";\""
+						}
+					},
+					{
+						"label": "Total War: Attach",
+						"description": "Attach to a game that is already running (or will be started from the launcher)",
+						"body": {
+							"name": "Attach to Total War",
+							"type": "tw-lua",
+							"request": "attach",
+							"executable": "^\"C:/Games/steamapps/common/Total War WARHAMMER III/Warhammer3.exe\""
+						}
+					}
+				],
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"executable"
+						],
+						"properties": {
+							"executable": {
+								"type": "string",
+								"description": "Path to the game executable, for example .../Total War WARHAMMER III/Warhammer3.exe."
+							},
+							"modListFile": {
+								"type": "string",
+								"description": "Mod list file (relative to the executable folder) passed to the game.",
+								"default": "used_mods.txt"
+							},
+							"arguments": {
+								"type": "string",
+								"description": "Extra command line arguments. Example that skips the frontend and loads a save: game_startup_mode campaign_load \"My Save.save\";",
+								"default": ""
+							},
+							"env": {
+								"type": "object",
+								"description": "Extra environment variables for the game.",
+								"additionalProperties": {
+									"type": "string"
+								},
+								"default": {}
+							},
+							"sourceFilesPath": {
+								"type": "string",
+								"description": "Folder with your Lua sources (the folder that contains 'script'). Searched before the workspace and the virtual source files.",
+								"default": "${workspaceFolder}/pack"
+							},
+							"terminateDebuggee": {
+								"type": "boolean",
+								"description": "Close the game when the debug session is stopped.",
+								"default": true
+							},
+							"captureOutput": {
+								"type": "boolean",
+								"description": "Mirror the game's script log (out/print) to the Debug Console.",
+								"default": true
+							},
+							"trace": {
+								"type": "boolean",
+								"description": "Log the debug adapter protocol traffic to the Debug Console.",
+								"default": false
+							}
+						}
+					},
+					"attach": {
+						"required": [
+							"executable"
+						],
+						"properties": {
+							"executable": {
+								"type": "string",
+								"description": "Path to the game executable. Used to find the folder the debugger communicates through."
+							},
+							"modListFile": {
+								"type": "string",
+								"description": "Mod list file (relative to the executable folder). Used for the virtual source files.",
+								"default": "used_mods.txt"
+							},
+							"sourceFilesPath": {
+								"type": "string",
+								"description": "Folder with your Lua sources (the folder that contains 'script'). Searched before the workspace and the virtual source files.",
+								"default": "${workspaceFolder}/pack"
+							},
+							"captureOutput": {
+								"type": "boolean",
+								"description": "Mirror the game's script log (out/print) to the Debug Console.",
+								"default": true
+							},
+							"trace": {
+								"type": "boolean",
+								"description": "Log the debug adapter protocol traffic to the Debug Console.",
+								"default": false
+							}
+						}
+					}
+				}
+			}
+		],
+		"customEditors": [
+			{
+				"viewType": "twdev.dbEditor",
+				"displayName": "Total War DB Table",
+				"selector": [
+					{
+						"filenamePattern": "**/db/*_tables/*"
+					},
+					{
+						"filenamePattern": "**/*.loc"
+					},
+					{
+						"filenamePattern": "**/*.loc.tsv"
+					}
+				],
+				"priority": "default"
+			}
+		]
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "^20.19.43",
+		"@types/vscode": "^1.90.0",
+		"@vscode/debugadapter-testsupport": "^1.68.0",
+		"@vscode/test-electron": "^3.1.0",
+		"@vscode/vsce": "^4.0.0",
+		"esbuild": "^0.28.2",
+		"eslint": "^10.12.0",
+		"mocha": "^12.0.3",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.71.1"
+	}
+}

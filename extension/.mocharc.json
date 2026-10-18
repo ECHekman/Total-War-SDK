@@ -1,0 +1,5 @@
+{
+	"spec": "out-test/test/{unit,lua}/**/*.test.js",
+	"timeout": 20000,
+	"ui": "bdd"
+}

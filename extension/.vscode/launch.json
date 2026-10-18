@@ -1,0 +1,25 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceFolder}/../example/example_mod.code-workspace"
+			],
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Unit + Lua Tests",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/mocha.js",
+			"args": ["--config", ".mocharc.json"],
+			"preLaunchTask": "npm: compile-tests",
+			"outFiles": ["${workspaceFolder}/out-test/**/*.js"]
+		}
+	]
+}

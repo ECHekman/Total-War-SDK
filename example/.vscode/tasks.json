@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			// Packs pack/ into out/example_mod.pack, installs it into the game's data
+			// folder, installs the debugger mod, and lists both in example_mod_mods.txt
+			// (next to the game executable). Runs before every launch.
+			"label": "Pack example_mod",
+			"type": "pack",
+			"packfilesDirectory": "pack",
+			"modName": "example_mod.pack",
+			"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
+			"modListFile": "example_mod_mods.txt",
+			"includeDebuggerMod": true,
+			// Mods this mod needs. When set, the task writes example_mod_mods.txt
+			// completely: this mod first (it wins when both have the same file),
+			// then the debugger mod, then these in the order listed.
+			// "dependencies": [
+			//	"2789857593",                                                    // a Steam Workshop item id (subscribe to it first)
+			//	"some_mod.pack",                                                  // a pack in the game's data folder
+			//	"D:/mods/other_mod.pack",                                         // any pack file
+			//	{ "folder": "../other_mod/pack", "modName": "other_mod.pack" }   // a mod you develop: packed before every launch
+			// ],
+			"problemMatcher": []
+		}
+	]
+}

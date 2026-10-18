@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "example_mod",
+			"path": "."
+		},
+		{
+			// Every Lua script inside the game's packs and your mods (read-only).
+			"name": "Virtual TW Source Files",
+			"uri": "twsource:/"
+		}
+	],
+	"settings": {
+		"twdev.game": "warhammer_3",
+		// Show the Run and Debug view (variables, call stack) when the game pauses.
+		"debug.openDebug": "openOnDebugBreak",
+		"files.exclude": {
+			"out": true
+		}
+	}
+}

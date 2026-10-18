@@ -1,0 +1,16 @@
+[package]
+name = "steam-helper"
+version = "2.0.0"
+authors = ["Fietspompje"]
+edition = "2021"
+license = "MIT"
+description = "Subscribes to and downloads Steam Workshop items for the TW Lua Debugger VS Code extension"
+
+[dependencies]
+steamworks = "0.13"
+
+[profile.release]
+lto = true
+strip = "symbols"
+opt-level = "s"
+codegen-units = 1
