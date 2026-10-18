@@ -9,7 +9,7 @@ import { parseLibraryFolders } from '../../src/steam';
 
 describe('mod list', () => {
 	const text = [
-		'add_working_directory "C:/Steam/steamapps/workshop/content/1142710/2864762290";',
+		'add_working_directory "C:/Steam/steamapps/workshop/content/1142710/2789857593";',
 		'add_working_directory C:/mods/other ;',
 		'mod "tw_lua_debugger.pack";',
 		'mod my_mod.pack;',
@@ -19,7 +19,7 @@ describe('mod list', () => {
 
 	it('parses working directories and mods', () => {
 		assert.deepEqual(parseModList(text), {
-			workingDirectories: ['C:/Steam/steamapps/workshop/content/1142710/2864762290', 'C:/mods/other'],
+			workingDirectories: ['C:/Steam/steamapps/workshop/content/1142710/2789857593', 'C:/mods/other'],
 			mods: ['tw_lua_debugger.pack', 'my_mod.pack'],
 		});
 	});

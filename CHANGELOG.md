@@ -2,31 +2,34 @@
 
 ## 2.0.0
 
-A rewrite of the debug adapter. The C# `DebugAdapter.exe` is gone; the adapter
-now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
+The first release of **Total War Modding Tools**, the successor to the TW Lua
+Debugger extension, published as a new extension (`Fietspompje.total-war-modding-tools`).
+The debug adapter was rewritten: the C# `DebugAdapter.exe` is gone, and the
+adapter now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
 
-### Breaking changes
-- The debug type is now `tw-lua` (was `lua`, which clashed with other Lua
-  debuggers). The extension offers to update old launch configurations, or run
-  **TotalWar: Migrate Old "lua" Launch Configurations**.
-- The in-game debugger mod speaks a new protocol. Update the Steam Workshop mod
-  or run **TotalWar: Install Debugger Mod into Game**. An old mod is detected
-  and reported in the Debug Console.
-- The `encoding` launch option was removed; messages are always UTF-8.
+### Changes from TW Lua Debugger 1.x
+- All ids are new so both extensions can be installed side by side: debug
+  type `totalwar-lua` (was `lua`), task type `totalwar-pack` (was `pack`), the
+  `totalwar:/` file system (was `twsource:/`) and `totalwar.*` commands and
+  settings (were `twdev.*`). Update `"type"` in existing launch and task
+  configurations. The `encoding` option was removed (messages are always UTF-8).
+- The debugger mod is no longer distributed on the Steam Workshop. Every debug
+  session packs it from the extension into the game's `data` folder and lists
+  it in the mod list (`installDebuggerMod` launch option), so it always matches
+  the extension. Disable or unsubscribe from the old Workshop mod; the Debug
+  Console reports it when it is still active.
 
 ### New
 - **TotalWar: Create Mod Project…** creates a ready-to-debug example mod
   (script, launch configurations, pack task, workspace with the virtual
   sources) for your game install.
-- `pack` task option `dependencies`: Workshop item ids, packs or local mod
+- `totalwar-pack` task option `dependencies`: Workshop item ids, packs or local mod
   folders the mod needs; the task resolves and packs them and writes the
   project's mod list (your mod first, so it wins over its dependencies).
 - The virtual sources merge mods in mod list order (first wins), as the game
   does, instead of RPFM's alphabetical order.
-- `pack` task option `includeDebuggerMod`: installs the debugger mod and lists
-  it in the mod list file before every launch.
 - Launch configurations can ask for a campaign save with the
-  `twdev.pickSaveGame` command input (newest first).
+  `totalwar.pickSaveGame` command input (newest first).
 - Conditional breakpoints, hit counts and logpoints.
 - Break on `script_error()` from mod scripts (on by default), on every
   `script_error()` including the game's own (off by default), and on `error()` calls.
@@ -36,7 +39,7 @@ now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
 - Hover evaluation, table previews, coroutines shown as threads.
 - The game's script log (`out`, `print`) is mirrored to the Debug Console
   (`captureOutput`).
-- Stack frames in pack files open from the virtual `twsource:/` file system;
+- Stack frames in pack files open from the virtual `totalwar:/` file system;
   local copies (`sourceFilesPath`, workspace folders) are preferred.
 - Attaching works at any time: the game picks up a debug session within a
   second, also after VS Code was restarted.
@@ -62,9 +65,9 @@ now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
 - A different debugger mod version in the game is reported in the Debug Console.
 
 - Modding SDK:
-  - Workshop dependencies of the `pack` task, and the items they require, are
+  - Workshop dependencies of the `totalwar-pack` task, and the items they require, are
     subscribed to and downloaded through Steam when missing
-    (`twdev.autoSubscribeDependencies`).
+    (`totalwar.autoSubscribeDependencies`).
   - Lua IntelliSense for the game's script library (LuaLS stubs generated from
     CA's doc comments), event name completion for `add_listener`, DB key
     completion and Ctrl+click in Lua strings.
@@ -83,6 +86,6 @@ now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
 - Launching from a folder with spaces (e.g. `Program Files (x86)`) ignored the
   mod list, so the debugger mod never loaded.
 - Requests with backslashes (e.g. evaluated strings) were corrupted.
-- The `pack` task kept running after an error and ignored the normalised mod
+- The `totalwar-pack` task kept running after an error and ignored the normalised mod
   name when installing.
 - The virtual file system reported every path as existing.

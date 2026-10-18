@@ -4,12 +4,11 @@ import * as vscode from 'vscode';
 
 import { DependencySpec, resolveDependencies, steamappsFolder, workshopPack } from './dependencies';
 import { DEFAULT_GAME, GameDefinition, gameByKey, gameForExecutable } from './games';
-import { DEBUGGER_PACK_NAME } from './installMod';
 import { addModToList, writeModList } from './modList';
 import { DbSchema, rpfm } from './rpfm';
 import { WorkshopCache, WorkshopItem, cachedWorkshopClient, steamHelperPath, steamWorkshopClient, workshopClosure } from './workshop';
 
-export const PACK_TASK_TYPE = 'pack';
+export const PACK_TASK_TYPE = 'totalwar-pack';
 
 interface PackTaskDefinition extends vscode.TaskDefinition {
 	packfilesDirectory: string;
@@ -18,13 +17,11 @@ interface PackTaskDefinition extends vscode.TaskDefinition {
 	game?: string;
 	addToUsedMods?: boolean;
 	modListFile?: string;
-	/** Also (re)install the debugger mod from this extension and list it in the mod list. */
-	includeDebuggerMod?: boolean;
 	/** Mods this mod needs; when set, the task writes the whole mod list file. */
 	dependencies?: DependencySpec[];
 }
 
-/** `pack` tasks: build a .pack from a workspace folder and install it into the game. */
+/** `totalwar-pack` tasks: build a .pack from a workspace folder and install it into the game. */
 export class PackTaskProvider implements vscode.TaskProvider {
 	constructor(private readonly extensionPath: string, private readonly state?: vscode.Memento,
 		private readonly schema?: () => Promise<DbSchema>) {}
@@ -88,7 +85,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 			modName += '.pack';
 		}
 		const game = def.game
-			?? vscode.workspace.getConfiguration('twdev').get<string>('game')
+			?? vscode.workspace.getConfiguration('totalwar').get<string>('game')
 			?? gameForExecutable(def.executable)?.key
 			?? DEFAULT_GAME;
 
@@ -134,30 +131,16 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 		}
 
 		const modList = path.join(gameDir, def.modListFile ?? 'used_mods.txt');
-		if (def.includeDebuggerMod) {
-			const debuggerPack = path.join(installDir, DEBUGGER_PACK_NAME);
-			try {
-				await rpfm().createPackFromFolderAsync(path.join(this.extensionPath, 'debuggee'), debuggerPack, game);
-				this.line(`Installed the debugger mod to ${debuggerPack}`);
-			} catch (e) {
-				// e.g. the game is running and holds the file open; the installed copy stays in use
-				this.line(`\x1b[33mCould not update the debugger mod (${(e as Error).message}); using the installed one.\x1b[0m`);
-			}
-		}
-
 		if (declared.length) {
 			// The project owns this mod list: write it completely. Highest priority
-			// first: this mod (it may override its dependencies), the debugger, then
-			// the dependencies in the order they are declared.
-			const mods = [modName, ...(def.includeDebuggerMod ? [DEBUGGER_PACK_NAME] : []), ...dependencies.map((d) => d.pack)];
+			// first: this mod (it may override its dependencies), then the
+			// dependencies in the order they are declared. Debug sessions add the
+			// debugger mod after the task has run.
+			const mods = [modName, ...dependencies.map((d) => d.pack)];
 			const dirs = dependencies.map((d) => d.workingDirectory).filter((d): d is string => !!d);
 			writeModList(modList, dirs, mods);
 			this.line(`Wrote ${modList}: ${mods.length} mods`);
 			return;
-		}
-
-		if (def.includeDebuggerMod && addModToList(modList, DEBUGGER_PACK_NAME)) {
-			this.line(`Added ${DEBUGGER_PACK_NAME} to ${modList}`);
 		}
 
 		if (def.addToUsedMods !== false) {
@@ -192,7 +175,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 	 */
 	private async prepareWorkshopItems(declared: DependencySpec[], game: GameDefinition, modName: string): Promise<string[]> {
 		const ids = declared.filter((s): s is string => typeof s === 'string' && /^\d+$/.test(s.trim())).map((s) => s.trim());
-		const config = vscode.workspace.getConfiguration('twdev');
+		const config = vscode.workspace.getConfiguration('totalwar');
 		const mode = config.get<'ask' | 'always' | 'never'>('autoSubscribeDependencies', 'ask');
 		const helper = steamHelperPath(this.extensionPath);
 		const steamapps = steamappsFolder(this.def.executable);
@@ -285,7 +268,7 @@ class PackTaskTerminal implements vscode.Pseudoterminal {
 	}
 }
 
-const WORKSHOP_CACHE_KEY = 'twdev.workshopItems';
+const WORKSHOP_CACHE_KEY = 'totalwar.workshopItems';
 
 function mementoCache(state: vscode.Memento): WorkshopCache {
 	type Entry = WorkshopItem & { at: number };

@@ -137,7 +137,7 @@ export class LuaApiService implements vscode.Disposable {
 			{ location: vscode.ProgressLocation.Notification, title: 'Reading the game\'s script library…' },
 			() => this.refresh(true));
 		if (!dir) {
-			void vscode.window.showErrorMessage('The game was not found. Set "twdev.game", or start a debug session once so the extension knows the install.');
+			void vscode.window.showErrorMessage('The game was not found. Set "totalwar.game", or start a debug session once so the extension knows the install.');
 			return;
 		}
 		await applyLuaSettings(dir, this.storageDir);
@@ -149,9 +149,9 @@ export class LuaApiService implements vscode.Disposable {
 	}
 }
 
-/** Whether the open workspace is a Total War mod project (it sets twdev.game, or has a pack task). */
+/** Whether the open workspace is a Total War mod project (it sets totalwar.game, or has a pack task). */
 export function isModWorkspace(): boolean {
-	if (vscode.workspace.getConfiguration('twdev').inspect('game')?.workspaceValue !== undefined) {
+	if (vscode.workspace.getConfiguration('totalwar').inspect('game')?.workspaceValue !== undefined) {
 		return true;
 	}
 	return (vscode.workspace.workspaceFolders ?? []).some((f) => {
@@ -160,11 +160,11 @@ export function isModWorkspace(): boolean {
 		}
 		const tasks = readText(path.join(f.uri.fsPath, '.vscode', 'tasks.json')) ?? '';
 		const launch = readText(path.join(f.uri.fsPath, '.vscode', 'launch.json')) ?? '';
-		return /"type"\s*:\s*"pack"/.test(tasks) || /"type"\s*:\s*"tw-lua"/.test(launch);
+		return /"type"\s*:\s*"totalwar-pack"/.test(tasks) || /"type"\s*:\s*"totalwar-lua"/.test(launch);
 	});
 }
 
-const OFFERED_KEY = 'twdev.luaSetupOffered';
+const OFFERED_KEY = 'totalwar.luaSetupOffered';
 
 /** In a mod project without Lua IntelliSense, offers to set it up (once per workspace). */
 export async function offerLuaSetup(state: vscode.Memento, service: LuaApiService): Promise<void> {

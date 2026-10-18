@@ -4,7 +4,7 @@ version = "2.0.0"
 authors = ["Fietspompje"]
 edition = "2021"
 license = "MIT"
-description = "Node.js bindings to rpfm_lib for the TW Lua Debugger VS Code extension"
+description = "Node.js bindings to rpfm_lib for the Total War Modding Tools VS Code extension"
 
 [lib]
 crate-type = ["cdylib"]

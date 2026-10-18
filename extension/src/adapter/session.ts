@@ -176,8 +176,8 @@ export class TwLuaDebugSession extends LoggingDebugSession {
 			onHello: (hello, first) => void this.onHello(hello, first),
 			onEvent: (evt) => this.onGameEvent(evt),
 			onLegacyDebuggee: () => this.output(
-				'An old version of the TW Lua Debugger mod is active in the game. Update the debugger mod '
-				+ '(command "TotalWar: Install Debugger Mod into Game", or update it on the Steam Workshop) and restart the game.\n',
+				'An old version of the debugger mod (TW Lua Debugger 1.x, e.g. from the Steam Workshop) is active in the game. '
+				+ 'Disable it or unsubscribe from it, and restart the game; the extension installs the current debugger mod itself.\n',
 				'stderr'),
 			onError: (err) => this.output(`Debugger transport error: ${err.message}\n`, 'stderr'),
 			onTrace: args.trace ? (dir, msg) => this.trace(dir, msg) : undefined,
@@ -274,7 +274,7 @@ export class TwLuaDebugSession extends LoggingDebugSession {
 		}
 		if (first && this.host.modVersion && hello.mod && hello.mod !== this.host.modVersion) {
 			this.output(`The debugger mod in the game is version ${hello.mod}; this extension ships ${this.host.modVersion}. `
-				+ 'Run "TotalWar: Install Debugger Mod into Game" (or update the Workshop mod) to get the matching version.\n', 'console');
+				+ 'The extension has installed its own version; restart the game to load it.\n', 'console');
 		}
 		await this.configurationDone;
 		const transport = this.transport;

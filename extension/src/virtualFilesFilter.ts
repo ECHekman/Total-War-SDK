@@ -4,7 +4,7 @@ import { virtualFilesExclude } from './SourceFileSystemProvider';
 
 /**
  * Kinds of pack files that can be hidden from the virtual files as a group,
- * as glob patterns for `twdev.virtualFiles.exclude` (relative to a pack; a
+ * as glob patterns for `totalwar.virtualFiles.exclude` (relative to a pack; a
  * pattern without `/` matches a name in any folder, a folder hides its contents).
  */
 export const FILE_CATEGORIES: { label: string; detail: string; globs: string[] }[] = [
@@ -25,7 +25,7 @@ export const FILE_CATEGORIES: { label: string; detail: string; globs: string[] }
 
 /**
  * "TotalWar: Filter Virtual Files…": tick the kinds of files to show; the
- * unticked ones are hidden. Writes `twdev.virtualFiles.exclude` (patterns of
+ * unticked ones are hidden. Writes `totalwar.virtualFiles.exclude` (patterns of
  * your own are kept).
  */
 export async function filterVirtualFiles(): Promise<void> {
@@ -37,7 +37,7 @@ export async function filterVirtualFiles(): Promise<void> {
 		canPickMany: true,
 		title: 'Show in Virtual TW Source Files',
 		placeHolder: own.length
-			? `Your own patterns are kept: ${own.join(', ')} (edit them in the twdev.virtualFiles.exclude setting)`
+			? `Your own patterns are kept: ${own.join(', ')} (edit them in the totalwar.virtualFiles.exclude setting)`
 			: 'Unticked kinds are hidden; folders left empty disappear. Hidden files still open from the debugger.',
 	});
 	if (!picks) {
@@ -48,5 +48,5 @@ export async function filterVirtualFiles(): Promise<void> {
 	const target = vscode.workspace.workspaceFolders?.length || vscode.workspace.workspaceFile
 		? vscode.ConfigurationTarget.Workspace
 		: vscode.ConfigurationTarget.Global;
-	await vscode.workspace.getConfiguration('twdev').update('virtualFiles.exclude', exclude.length ? exclude : undefined, target);
+	await vscode.workspace.getConfiguration('totalwar').update('virtualFiles.exclude', exclude.length ? exclude : undefined, target);
 }

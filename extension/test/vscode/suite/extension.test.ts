@@ -4,7 +4,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-import { migrateConfiguration } from '../../../src/debugConfig';
 import { planClone } from '../../../src/db/cloneEntity';
 import { DbTableModel } from '../../../src/db/dbTableModel';
 import type { TwLuaDebuggerApi } from '../../../src/extension';
@@ -18,41 +17,34 @@ const debuggeeRoot = path.resolve(extensionRoot, '..', 'debuggee');
 // Optional: a real game install for the virtual source file test (read only).
 const wh3 = process.env.TW_GAME_DIR ?? 'C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III';
 
-describe('TW Lua Debugger extension', () => {
+describe('Total War Modding Tools extension', () => {
 	let api: TwLuaDebuggerApi;
 
 	before(async () => {
-		const ext = vscode.extensions.getExtension<TwLuaDebuggerApi>('Fietspompje.tw-lua-debug');
+		const ext = vscode.extensions.getExtension<TwLuaDebuggerApi>('Fietspompje.total-war-modding-tools');
 		assert.ok(ext, 'extension not found');
 		api = await ext.activate();
 	});
 
 	it('registers its commands', async () => {
 		const commands = await vscode.commands.getCommands(true);
-		for (const c of ['twdev.sourceFiles', 'twdev.reloadSourceFiles', 'twdev.installDebuggerMod', 'twdev.migrateLaunchConfigs', 'twdev.openDbTable', 'twdev.updateDbSchema', 'twdev.filterVirtualFiles']) {
+		for (const c of ['totalwar.sourceFiles', 'totalwar.reloadSourceFiles', 'totalwar.installDebuggerMod', 'totalwar.openDbTable', 'totalwar.updateDbSchema', 'totalwar.filterVirtualFiles']) {
 			assert.ok(commands.includes(c), `missing ${c}`);
 		}
 	});
 
-	it('migrates 1.x launch configurations', () => {
-		const migrated = migrateConfiguration({ name: 'x', type: 'lua', request: 'launch', executable: 'a.exe', modListFile: 'used_mods.txt', encoding: 'UTF-8' });
-		assert.deepEqual(migrated, { name: 'x', type: 'tw-lua', request: 'launch', executable: 'a.exe', modListFile: 'used_mods.txt' });
-		const other = { name: 'y', type: 'lua', request: 'launch', program: 'main.lua' };
-		assert.equal(migrateConfiguration(other), other);
-	});
-
-	it('serves the Lua files of an installed game as twsource:/', async function () {
+	it('serves the Lua files of an installed game as totalwar:/', async function () {
 		if (!fs.existsSync(path.join(wh3, 'data', 'data.pack'))) {
 			this.skip();
 		}
 		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
-		const root = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/'));
+		const root = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/'));
 		assert.deepEqual(root, [['@basegame', vscode.FileType.Directory]]);
-		const lib = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/@basegame/script/_lib'));
+		const lib = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/@basegame/script/_lib'));
 		assert.ok(lib.some(([name, type]) => name === 'lib_core.lua' && type === vscode.FileType.File));
-		const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse('twsource:/@basegame/SCRIPT/_lib/lib_core.lua'));
+		const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse('totalwar:/@basegame/SCRIPT/_lib/lib_core.lua'));
 		assert.match(doc.getText(), /core_object/);
-		await assert.rejects(Promise.resolve(vscode.workspace.fs.stat(vscode.Uri.parse('twsource:/@basegame/script/nope.lua'))));
+		await assert.rejects(Promise.resolve(vscode.workspace.fs.stat(vscode.Uri.parse('totalwar:/@basegame/script/nope.lua'))));
 		// toString() encodes '@' as %40; compare the decoded path.
 		assert.equal(vscode.Uri.parse(api.sources.uriFor('script/_lib/lib_core.lua')!).path, '/@basegame/script/_lib/lib_core.lua');
 	});
@@ -73,7 +65,7 @@ describe('TW Lua Debugger extension', () => {
 		const found = await api.db.findKey('wh_main_emp_inf_swordsmen');
 		assert.ok(found.some((f) => f.table === 'land_units_tables'));
 		// The grid opens on a row.
-		await vscode.commands.executeCommand('twdev.openDbTable', 'land_units_tables', 'wh_main_emp_inf_swordsmen');
+		await vscode.commands.executeCommand('totalwar.openDbTable', 'land_units_tables', 'wh_main_emp_inf_swordsmen');
 		// The tab model is updated asynchronously.
 		const gridTab = () => vscode.window.tabGroups.all.flatMap((g) => g.tabs)
 			.some((t) => t.input instanceof vscode.TabInputWebview && t.label === 'land_units_tables');
@@ -132,11 +124,11 @@ describe('TW Lua Debugger extension', () => {
 			this.skip();
 		}
 		await api.sources.configure({ exeDir: wh3, modListFile: modList!, game: 'warhammer_3' });
-		const mods = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/@mods'));
+		const mods = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/@mods'));
 		assert.ok(mods.length > 0, 'no mods listed');
 		const [packName] = mods[0];
 		assert.match(packName, /\.pack$/);
-		const root = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/'))).map(([n]) => n).sort();
+		const root = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/'))).map(([n]) => n).sort();
 		assert.deepEqual(root, ['@basegame', '@mods']);
 		const walk = async (uri: vscode.Uri): Promise<string[]> => {
 			const out: string[] = [];
@@ -146,24 +138,24 @@ describe('TW Lua Debugger extension', () => {
 			}
 			return out;
 		};
-		const modRoot = vscode.Uri.parse(`twsource:/@mods/${packName}`);
+		const modRoot = vscode.Uri.parse(`totalwar:/@mods/${packName}`);
 		const files = await walk(modRoot);
 		assert.ok(files.length > 0);
 		// Every file of the mod is listed; the debugger maps Lua files.
 		const lua = files.find((f) => f.endsWith('.lua'))!;
 		assert.ok(lua, 'no Lua file in the mod');
-		const own = new TextDecoder().decode(await vscode.workspace.fs.readFile(vscode.Uri.parse(`twsource:${lua}`)));
+		const own = new TextDecoder().decode(await vscode.workspace.fs.readFile(vscode.Uri.parse(`totalwar:${lua}`)));
 		assert.ok(own.length > 0);
 		// The copy the game runs is the first mod's: for the first mod's files, that mod.
 		const inner = lua.slice(modRoot.path.length + 1);
-		assert.equal(api.sources.uriFor(inner), vscode.Uri.parse(`twsource:${lua}`).toString());
+		assert.equal(api.sources.uriFor(inner), vscode.Uri.parse(`totalwar:${lua}`).toString());
 		// Back to the plain game files for the next tests.
 		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
 	});
 
 	it('refuses to start without a valid executable', async () => {
 		const started = await vscode.debug.startDebugging(undefined, {
-			name: 'bad', type: 'tw-lua', request: 'launch', executable: path.join(extensionRoot, 'does-not-exist.exe'),
+			name: 'bad', type: 'totalwar-lua', request: 'launch', executable: path.join(extensionRoot, 'does-not-exist.exe'),
 		});
 		assert.equal(started, false);
 	});
@@ -175,7 +167,7 @@ describe('TW Lua Debugger extension', () => {
 		this.timeout(120000);
 		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
 		// Every file is listed, not only Lua and DB tables: a PNG reads back as its bytes.
-		const top = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/@basegame'))).map(([n]) => n);
+		const top = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/@basegame'))).map(([n]) => n);
 		assert.ok(top.includes('ui') && top.includes('script') && top.includes('db'), top.join(', '));
 		const findPng = async (dir: vscode.Uri, depth: number): Promise<vscode.Uri | undefined> => {
 			for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
@@ -192,17 +184,17 @@ describe('TW Lua Debugger extension', () => {
 			}
 			return undefined;
 		};
-		const png = await findPng(vscode.Uri.parse('twsource:/@basegame/ui'), 3);
+		const png = await findPng(vscode.Uri.parse('totalwar:/@basegame/ui'), 3);
 		assert.ok(png, 'no png under ui/');
 		const bytes = await vscode.workspace.fs.readFile(png);
 		assert.deepEqual([...bytes.subarray(1, 4)].map((b) => String.fromCharCode(b)).join(''), 'PNG');
 		assert.equal((await vscode.workspace.fs.stat(png)).type, vscode.FileType.File);
 		// The filter hides files, and folders left empty; hidden files still open.
-		const config = vscode.workspace.getConfiguration('twdev');
+		const config = vscode.workspace.getConfiguration('totalwar');
 		await config.update('virtualFiles.exclude', ['audio', '*.png'], vscode.ConfigurationTarget.Global);
 		try {
 			await api.sources.refilter();
-			const filtered = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/@basegame'))).map(([n]) => n);
+			const filtered = (await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/@basegame'))).map(([n]) => n);
 			assert.ok(!filtered.includes('audio') && filtered.includes('ui'), filtered.join(', '));
 			const pngFolder = vscode.Uri.joinPath(png, '..');
 			const left = await vscode.workspace.fs.readDirectory(pngFolder).then((l) => l.map(([n]) => n), () => [] as string[]);
@@ -212,10 +204,10 @@ describe('TW Lua Debugger extension', () => {
 			await config.update('virtualFiles.exclude', undefined, vscode.ConfigurationTarget.Global);
 			await api.sources.refilter();
 		}
-		const tables = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('twsource:/@basegame/db'));
+		const tables = await vscode.workspace.fs.readDirectory(vscode.Uri.parse('totalwar:/@basegame/db'));
 		assert.ok(tables.some(([name, type]) => name === 'land_units_tables' && type === vscode.FileType.Directory));
-		const uri = vscode.Uri.parse('twsource:/@basegame/db/unit_armour_types_tables/data__');
-		await vscode.commands.executeCommand('vscode.openWith', uri, 'twdev.dbEditor');
+		const uri = vscode.Uri.parse('totalwar:/@basegame/db/unit_armour_types_tables/data__');
+		await vscode.commands.executeCommand('vscode.openWith', uri, 'totalwar.dbEditor');
 		let doc;
 		for (let i = 0; i < 100 && !(doc = api.dbEditor.documents.find((d) => d.uri.path === uri.path && (d.model || d.error))); i++) {
 			await new Promise((resolve) => setTimeout(resolve, 100));
@@ -233,7 +225,7 @@ describe('TW Lua Debugger extension', () => {
 		fs.mkdirSync(path.dirname(file.fsPath), { recursive: true });
 		fs.writeFileSync(file.fsPath, ''); // a new, empty fragment
 		const open = async () => {
-			await vscode.commands.executeCommand('vscode.openWith', file, 'twdev.dbEditor');
+			await vscode.commands.executeCommand('vscode.openWith', file, 'totalwar.dbEditor');
 			for (let i = 0; i < 100 && !api.dbEditor.documents.some((d) => d.uri.fsPath === file.fsPath && (d.model || d.error)); i++) {
 				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
@@ -271,7 +263,7 @@ describe('TW Lua Debugger extension', () => {
 			fs.writeFileSync(f.fsPath, '');
 		}
 		const edit = async (file: vscode.Uri, values: Record<string, string>) => {
-			await vscode.commands.executeCommand('vscode.openWith', file, 'twdev.dbEditor');
+			await vscode.commands.executeCommand('vscode.openWith', file, 'totalwar.dbEditor');
 			for (let i = 0; i < 100 && !api.dbEditor.documents.some((d) => d.uri.fsPath === file.fsPath && (d.model || d.error)); i++) {
 				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
@@ -305,7 +297,7 @@ describe('TW Lua Debugger extension', () => {
 			const file = path.join(dir, 'pack', 'db', 'land_units_tables', '!!!old');
 			fs.mkdirSync(path.dirname(file), { recursive: true });
 			fs.writeFileSync(file, native.encodeDb(schema, 'land_units_tables', old.version, [], 'warhammer_3'));
-			await vscode.commands.executeCommand('twdev.migrateDbTable', vscode.Uri.file(file));
+			await vscode.commands.executeCommand('totalwar.migrateDbTable', vscode.Uri.file(file));
 			assert.equal(native.decodeDbBytes(fs.readFileSync(file), 'land_units_tables', schema).version, gameVersion);
 		}
 	});
@@ -400,7 +392,7 @@ describe('TW Lua Debugger extension', () => {
 			this.skip();
 		}
 		const stopped = new Promise<{ line: number; source?: string }>((resolve) => {
-			const tracker = vscode.debug.registerDebugAdapterTrackerFactory('tw-lua', {
+			const tracker = vscode.debug.registerDebugAdapterTrackerFactory('totalwar-lua', {
 				createDebugAdapterTracker: (session) => ({
 					onDidSendMessage: async (m: { type: string; event?: string }) => {
 						if (m.type === 'event' && m.event === 'stopped') {
@@ -419,8 +411,8 @@ describe('TW Lua Debugger extension', () => {
 		// The "game" is the Lua interpreter running the fake game loop.
 		const args = ['"' + path.join(fixtures, 'run_game.lua') + '"', '"' + debuggeeRoot + '"', '"' + fixtures + '"', 'campaign', '40'].join(' ');
 		const ok = await vscode.debug.startDebugging(undefined, {
-			name: 'fake game', type: 'tw-lua', request: 'launch',
-			executable: lua, modListFile: '', arguments: args, sourceFilesPath: fixtures,
+			name: 'fake game', type: 'totalwar-lua', request: 'launch',
+			executable: lua, modListFile: '', arguments: args, sourceFilesPath: fixtures, installDebuggerMod: false,
 		});
 		assert.ok(ok, 'debug session did not start');
 

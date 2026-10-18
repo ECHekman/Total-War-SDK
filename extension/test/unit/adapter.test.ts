@@ -49,12 +49,12 @@ describe('PathMapper', () => {
 		assert.equal(chunkToKey('@script/campaign/mod/no_extension'), 'script/campaign/mod/no_extension.lua');
 	});
 
-	it('maps editor paths and twsource URIs to keys', () => {
+	it('maps editor paths and totalwar URIs to keys', () => {
 		const m = new PathMapper({ workspaceFolders: ['C:\\mods\\mine'] });
-		assert.equal(m.editorPathToKey('twsource:/script/campaign/mod/My%20File.lua'), 'script/campaign/mod/my file.lua');
-		assert.equal(m.editorPathToKey('twsource:/@basegame/script/_lib/lib_core.lua'), 'script/_lib/lib_core.lua');
-		assert.equal(m.editorPathToKey('twsource:/@mods/van_mct.pack/script/_lib/mod/mct.lua'), 'script/_lib/mod/mct.lua');
-		assert.equal(m.editorPathToKey('twsource:/%40basegame/script/_lib/lib_core.lua'), 'script/_lib/lib_core.lua');
+		assert.equal(m.editorPathToKey('totalwar:/script/campaign/mod/My%20File.lua'), 'script/campaign/mod/my file.lua');
+		assert.equal(m.editorPathToKey('totalwar:/@basegame/script/_lib/lib_core.lua'), 'script/_lib/lib_core.lua');
+		assert.equal(m.editorPathToKey('totalwar:/@mods/van_mct.pack/script/_lib/mod/mct.lua'), 'script/_lib/mod/mct.lua');
+		assert.equal(m.editorPathToKey('totalwar:/%40basegame/script/_lib/lib_core.lua'), 'script/_lib/lib_core.lua');
 		assert.equal(m.editorPathToKey('C:\\mods\\mine\\pack\\script\\campaign\\mod\\a.lua'), 'script/campaign/mod/a.lua');
 		assert.equal(m.editorPathToKey(path.join('C:\\mods\\mine', 'lua', 'b.lua')), 'lua/b.lua');
 	});
@@ -70,13 +70,13 @@ describe('PathMapper', () => {
 			fileExists: (p) => files.has(p.toLowerCase()),
 			listDirs: (p) => (p === 'C:\\ws' ? [path.join('C:\\ws', 'pack')] : []),
 			virtual: {
-				uriFor: (key) => (key === 'script/c.lua' ? 'twsource:/script/c.lua' : undefined),
+				uriFor: (key) => (key === 'script/c.lua' ? 'totalwar:/script/c.lua' : undefined),
 				read: () => '-- c',
 			},
 		});
 		assert.equal(m.chunkToSource('@script/a.lua').path, path.join('C:\\src', 'script', 'a.lua'));
 		assert.equal(m.chunkToSource('@script/b.lua').path, path.join('C:\\ws', 'pack', 'script', 'b.lua'));
-		assert.equal(m.chunkToSource('@script/c.lua').path, 'twsource:/script/c.lua');
+		assert.equal(m.chunkToSource('@script/c.lua').path, 'totalwar:/script/c.lua');
 		const missing = m.chunkToSource('@script/d.lua');
 		assert.equal(missing.path, undefined);
 		assert.equal(missing.key, 'script/d.lua');

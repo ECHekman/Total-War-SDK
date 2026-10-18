@@ -1,4 +1,4 @@
--- example_mod: a small campaign script to try the TW Lua Debugger with.
+-- example_mod: a small campaign script to try the Total War Modding Tools debugger with.
 --
 -- Things to try (see README.md):
 --   * a breakpoint in on_heartbeat is hit every 10 seconds on the campaign map

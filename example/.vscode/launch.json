@@ -3,7 +3,7 @@
 	"configurations": [
 		{
 			"name": "Launch into a save",
-			"type": "tw-lua",
+			"type": "totalwar-lua",
 			"request": "launch",
 			"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
 			"modListFile": "example_mod_mods.txt",
@@ -13,7 +13,7 @@
 		},
 		{
 			"name": "Launch to the main menu",
-			"type": "tw-lua",
+			"type": "totalwar-lua",
 			"request": "launch",
 			"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
 			"modListFile": "example_mod_mods.txt",
@@ -22,7 +22,7 @@
 		},
 		{
 			"name": "Attach to the running game",
-			"type": "tw-lua",
+			"type": "totalwar-lua",
 			"request": "attach",
 			"executable": "C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III/Warhammer3.exe",
 			"modListFile": "example_mod_mods.txt",
@@ -33,7 +33,7 @@
 		{
 			"id": "saveGame",
 			"type": "command",
-			"command": "twdev.pickSaveGame"
+			"command": "totalwar.pickSaveGame"
 		}
 	]
 }

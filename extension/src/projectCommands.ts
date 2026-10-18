@@ -8,12 +8,12 @@ import { listSaveGames, saveGamesFolder } from './saves';
 import { findGameExecutable } from './steam';
 
 function configuredGame() {
-	return gameByKey(vscode.workspace.getConfiguration('twdev').get<string>('game') ?? DEFAULT_GAME);
+	return gameByKey(vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? DEFAULT_GAME);
 }
 
 /**
  * Lets the user pick a campaign save, newest first. Used from launch.json as
- * `${input:...}` with `"type": "command", "command": "twdev.pickSaveGame"`.
+ * `${input:...}` with `"type": "command", "command": "totalwar.pickSaveGame"`.
  * Returns undefined (which cancels the launch) when nothing is picked.
  */
 export async function pickSaveGame(): Promise<string | undefined> {

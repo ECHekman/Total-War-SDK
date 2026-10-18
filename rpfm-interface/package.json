@@ -2,7 +2,7 @@
   "name": "rpfm-interface",
   "version": "2.0.0",
   "private": true,
-  "description": "Node.js bindings to rpfm_lib for the TW Lua Debugger extension",
+  "description": "Node.js bindings to rpfm_lib for the Total War Modding Tools extension",
   "main": "rpfm-interface.win32-x64-msvc.node",
   "types": "rpfm-interface.d.ts",
   "scripts": {

@@ -1,4 +1,4 @@
--- TW Lua Debugger: frontend bootstrap. Connects the debugger and polls VS Code.
+-- Total War Modding Tools debugger: frontend bootstrap. Connects the debugger and polls VS Code.
 if not debuggee then
 	return
 end

@@ -40,7 +40,7 @@ export class DbTreeProvider implements vscode.TreeDataProvider<Node>, vscode.Dis
 		const item = new vscode.TreeItem(node.table);
 		item.iconPath = new vscode.ThemeIcon('table');
 		item.contextValue = 'dbTable';
-		item.command = { command: 'twdev.openDbTable', title: 'Open', arguments: [node.table] };
+		item.command = { command: 'totalwar.openDbTable', title: 'Open', arguments: [node.table] };
 		return item;
 	}
 

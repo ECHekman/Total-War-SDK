@@ -31,7 +31,7 @@ export class DbDocument implements vscode.CustomDocument {
 
 	constructor(readonly uri: vscode.Uri) {}
 
-	/** A file the editor cannot write: a table inside a pack (the `twsource:` virtual files). */
+	/** A file the editor cannot write: a table inside a pack (the `totalwar:` virtual files). */
 	get readOnly(): boolean {
 		return vscode.workspace.fs.isWritableFileSystem(this.uri.scheme) === false;
 	}
@@ -85,7 +85,7 @@ interface WebviewMessage {
  * Database viewer. Saves the binary table the pack task packs.
  */
 export class DbEditorProvider implements vscode.CustomEditorProvider<DbDocument> {
-	static readonly viewType = 'twdev.dbEditor';
+	static readonly viewType = 'totalwar.dbEditor';
 
 	private readonly changes = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<DbDocument>>();
 	readonly onDidChangeCustomDocument = this.changes.event;
@@ -165,7 +165,7 @@ export class DbEditorProvider implements vscode.CustomEditorProvider<DbDocument>
 				}
 				return;
 			case 'updateSchema':
-				await vscode.commands.executeCommand('twdev.updateDbSchema');
+				await vscode.commands.executeCommand('totalwar.updateDbSchema');
 				return;
 		}
 		if (!model || doc.readOnly) {
@@ -452,7 +452,7 @@ export async function newDbTable(db: DbService, target?: vscode.Uri): Promise<vo
 }
 
 function newFileFormat(): 'binary' | 'tsv' {
-	return vscode.workspace.getConfiguration('twdev').get<'binary' | 'tsv'>('newTableFormat', 'binary');
+	return vscode.workspace.getConfiguration('totalwar').get<'binary' | 'tsv'>('newTableFormat', 'binary');
 }
 
 /**
@@ -582,7 +582,7 @@ function fromTsv(uri: vscode.Uri, bytes: Uint8Array, schema: DbSchema | undefine
 	let file = uri.scheme === 'file' ? uri.fsPath : undefined;
 	let temp: string | undefined;
 	if (!file) {
-		temp = path.join(os.tmpdir(), `twdev-${process.pid}-${Date.now()}.tsv`);
+		temp = path.join(os.tmpdir(), `totalwar-${process.pid}-${Date.now()}.tsv`);
 		fs.writeFileSync(temp, bytes);
 		file = temp;
 	}
@@ -602,7 +602,7 @@ function fromTsv(uri: vscode.Uri, bytes: Uint8Array, schema: DbSchema | undefine
 
 /** `binary` (a DB table or loc file at `packPath`) as RPFM TSV text. */
 function toTsv(binary: Buffer, packPath: string, schema: DbSchema): Uint8Array {
-	const temp = path.join(os.tmpdir(), `twdev-${process.pid}-${Date.now()}-out.tsv`);
+	const temp = path.join(os.tmpdir(), `totalwar-${process.pid}-${Date.now()}-out.tsv`);
 	try {
 		rpfm().binaryToTsv(binary, packPath, schema, temp);
 		return fs.readFileSync(temp);

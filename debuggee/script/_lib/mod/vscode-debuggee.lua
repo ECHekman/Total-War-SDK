@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- TW Lua Debugger - in-game debuggee (protocol 2)
+-- Total War Modding Tools debugger - in-game debuggee (protocol 2)
 --
 -- Talks to the VS Code extension through files in <game folder>/tw_lua_debugger/:
 --   session.json  written by VS Code while a debug session is active

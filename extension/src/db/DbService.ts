@@ -91,9 +91,9 @@ export class DbService implements GameDatabase, vscode.Disposable {
 		return `${path.basename(l.schema.file)} (${l.schema.origin}), ${l.tables.length} tables`;
 	}
 
-	/** Game key of the configured game (or the twdev.game setting). */
+	/** Game key of the configured game (or the totalwar.game setting). */
 	get game(): string {
-		return this.sources.game ?? vscode.workspace.getConfiguration('twdev').get<string>('game') ?? 'warhammer_3';
+		return this.sources.game ?? vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? 'warhammer_3';
 	}
 
 	/**
@@ -142,12 +142,12 @@ export class DbService implements GameDatabase, vscode.Disposable {
 	 * packs, so DB files can be edited without a game install.
 	 */
 	schema(): Promise<LoadedSchema> {
-		const game = this.sources.game ?? vscode.workspace.getConfiguration('twdev').get<string>('game') ?? 'warhammer_3';
+		const game = this.sources.game ?? vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? 'warhammer_3';
 		if (this.schemaLoading?.game !== game) {
 			const promise = (async () => {
 				const found = await resolveSchema(game, this.locations(), (m) => this.log.appendLine(m));
 				if (!found) {
-					throw new Error(`No DB schema for ${game}. Run "TotalWar: Update DB Schema" or set twdev.dbSchemaPath.`);
+					throw new Error(`No DB schema for ${game}. Run "TotalWar: Update DB Schema" or set totalwar.dbSchemaPath.`);
 				}
 				return { game, schema: await rpfm().loadSchemaAsync(found.file), file: found.file, origin: found.origin };
 			})();
@@ -179,7 +179,7 @@ export class DbService implements GameDatabase, vscode.Disposable {
 		const packs = await this.sources.packSources();
 		const game = this.sources.game;
 		if (!game || packs.length === 0) {
-			throw new Error('No game packs loaded. Start a Total War debug session (or check the "TW Lua Debugger" output).');
+			throw new Error('No game packs loaded. Start a Total War debug session (or check the "Total War Modding Tools" output).');
 		}
 		const started = Date.now();
 		const schema = await this.schema();

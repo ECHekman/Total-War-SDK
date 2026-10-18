@@ -1,4 +1,4 @@
-//! Subscribes to and downloads Steam Workshop items for the TW Lua Debugger
+//! Subscribes to and downloads Steam Workshop items for Total War Modding Tools
 //! extension, as the game (Steam app id) they belong to.
 //!
 //! The extension runs this as a short-lived child process, so Steam shows the
