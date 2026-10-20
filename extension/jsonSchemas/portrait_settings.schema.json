@@ -1,0 +1,78 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Portrait settings",
+	"description": "A portrait_settings*.bin file: the portraits (campaign portholes and the character details window) of art sets.",
+	"type": "object",
+	"required": ["version", "entries"],
+	"additionalProperties": false,
+	"properties": {
+		"version": {
+			"description": "File format version: 4 in WARHAMMER III, 1 in Attila, Thrones of Britannia and WARHAMMER I/II.",
+			"enum": [1, 4]
+		},
+		"entries": {
+			"description": "One entry per art set.",
+			"type": "array",
+			"items": { "$ref": "#/definitions/entry" }
+		}
+	},
+	"definitions": {
+		"entry": {
+			"type": "object",
+			"required": ["id", "camera_settings_head", "camera_settings_body", "variants"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Art set key (campaign_character_art_sets_tables) these portraits are for.",
+					"type": "string"
+				},
+				"camera_settings_head": {
+					"description": "Camera of the porthole portrait (campaign, bottom left).",
+					"$ref": "#/definitions/camera"
+				},
+				"camera_settings_body": {
+					"description": "Camera of the full body shown in the character details window. Only characters need one; null for units.",
+					"oneOf": [{ "$ref": "#/definitions/camera" }, { "type": "null" }]
+				},
+				"variants": {
+					"description": "Portrait images, one per variant of the art set.",
+					"type": "array",
+					"items": { "$ref": "#/definitions/variant" }
+				}
+			}
+		},
+		"camera": {
+			"type": "object",
+			"required": ["z", "y", "yaw", "pitch", "distance", "theta", "phi", "fov", "skeleton_node"],
+			"additionalProperties": false,
+			"properties": {
+				"z": { "description": "Distance from the character to the camera.", "type": "number" },
+				"y": { "description": "Vertical displacement of the camera.", "type": "number" },
+				"yaw": { "description": "Sideways rotation of the camera, in degrees.", "type": "number" },
+				"pitch": { "description": "Vertical rotation of the camera, in degrees. The camera levels itself beyond 90/-90.", "type": "number" },
+				"distance": { "description": "Version 1 only.", "type": "number" },
+				"theta": { "description": "Version 1 only.", "type": "number" },
+				"phi": { "description": "Version 1 only.", "type": "number" },
+				"fov": { "description": "Field of view, in degrees.", "type": "number" },
+				"skeleton_node": { "description": "Skeleton node the camera focuses on; positions and rotations are relative to it. Empty for none.", "type": "string" }
+			}
+		},
+		"variant": {
+			"type": "object",
+			"required": ["filename", "file_diffuse", "file_mask_1", "file_mask_2", "file_mask_3", "season", "level", "age", "politician", "faction_leader"],
+			"additionalProperties": false,
+			"properties": {
+				"filename": { "description": "Variant name: the filename column of variants_tables.", "type": "string" },
+				"file_diffuse": { "description": "Pack path of the portrait image, e.g. ui/portraits/portholes/.../x_0.png.", "type": "string" },
+				"file_mask_1": { "description": "Pack path of a mask image (optional).", "type": "string" },
+				"file_mask_2": { "description": "Pack path of a mask image (optional).", "type": "string" },
+				"file_mask_3": { "description": "Pack path of a mask image (optional).", "type": "string" },
+				"season": { "description": "Version 1 only.", "type": "string" },
+				"level": { "description": "Version 1 only.", "type": "integer" },
+				"age": { "description": "Version 1 only.", "type": "integer" },
+				"politician": { "description": "Version 1 only.", "type": "boolean" },
+				"faction_leader": { "description": "Version 1 only.", "type": "boolean" }
+			}
+		}
+	}
+}

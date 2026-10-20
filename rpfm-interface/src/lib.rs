@@ -838,3 +838,257 @@ pub fn binary_to_tsv(bytes: Buffer, pack_path: String, schema: &DbSchema, tsv_pa
     file.tsv_export_to_path(Path::new(&tsv_path), &schema.schema, false)
         .map_err(to_napi(&format!("Could not write {tsv_path}")))
 }
+
+// ---- Structured binary files as JSON --------------------------------------------
+
+/// Types shown as JSON. Whether a file can be saved from its JSON is decided
+/// per file (see `read_only_reason`): RPFM only partly understands some of
+/// these formats, and what its decoder skips would be lost on saving.
+const JSON_TYPES: &[FileType] = &[
+    FileType::PortraitSettings, FileType::AnimsTable, FileType::MatchedCombat, FileType::Atlas,
+    FileType::AnimFragmentBattle, FileType::GroupFormations, FileType::BMD, FileType::BMDVegetation,
+];
+
+/// A binary file decoded to JSON (see `decodeToJson`).
+#[napi(object)]
+pub struct DecodedJson {
+    /// RPFM's name of the type, e.g. `PortraitSettings`; pass it to `encodeFromJson`.
+    pub file_type: String,
+    /// The decoded file, pretty printed.
+    pub json: String,
+    /// Whether the file can be saved from its JSON: encoding what was decoded
+    /// gives back its exact bytes, so nothing in it is lost on the way.
+    pub editable: bool,
+    /// Why it cannot be saved, when it cannot.
+    pub read_only_reason: Option<String>,
+}
+
+/// The JSON of a decoded file of one of the JSON types.
+macro_rules! json_of {
+    ($decoded:expr, $($variant:ident),*) => {
+        match $decoded {
+            $(RFileDecoded::$variant(data) => serde_json::to_string_pretty(&data),)*
+            _ => return Ok(None),
+        }
+    };
+}
+
+/// The file of a JSON type, from its JSON.
+macro_rules! from_json {
+    ($file_type:expr, $json:expr, $($variant:ident),*) => {
+        match $file_type {
+            $(stringify!($variant) => serde_json::from_str($json).map(RFileDecoded::$variant),)*
+            other => return Err(Error::from_reason(format!("{other} files cannot be saved from JSON"))),
+        }
+    };
+}
+
+/// Decodes the bytes of a file at `path` in a pack to JSON; None for types that have no JSON form.
+fn decode_json_bytes(bytes: &[u8], path: &str, game: &str) -> Result<Option<DecodedJson>> {
+    let mut file = file_from_bytes(bytes, path)?;
+    let file_type = file.file_type();
+    if !JSON_TYPES.contains(&file_type) {
+        return Ok(None);
+    }
+    let decoded = decode_with_game(&mut file, path, game)?;
+    let json = json_of!(&decoded, PortraitSettings, AnimsTable, MatchedCombat, Atlas, AnimFragmentBattle, GroupFormations, BMD, BMDVegetation)
+        .map_err(to_napi(&format!("Could not write {path} as JSON")))?;
+    let read_only_reason = read_only_reason(bytes, &json, &format!("{file_type:?}"), path, game);
+    Ok(Some(DecodedJson { file_type: format!("{file_type:?}"), json, editable: read_only_reason.is_none(), read_only_reason }))
+}
+
+/// Why a decoded file cannot be saved from its JSON: saving the JSON as shown
+/// does not give back the file's bytes (RPFM's decoder skipped or misread part
+/// of it, or a value does not survive the trip through JSON text).
+fn read_only_reason(bytes: &[u8], json: &str, file_type: &str, path: &str, game: &str) -> Option<String> {
+    match encode_json(json, file_type, path, game) {
+        Ok(again) if again == bytes => None,
+        Ok(again) => {
+            let at = bytes.iter().zip(&again).position(|(a, b)| a != b).unwrap_or(bytes.len().min(again.len()));
+            Some(format!("RPFM does not read all of this file: saving it would change it ({} bytes, saved {}, first difference at byte {at}), so it is read only.", bytes.len(), again.len()))
+        }
+        Err(e) => Some(format!("RPFM cannot write this file back ({}), so it is read only.", e.reason)),
+    }
+}
+
+/// A decoded file as a JSON value without what rpfm_lib makes up on every
+/// read: the `id` of each tree in a vegetation file is random, not stored.
+fn comparable(decoded: &RFileDecoded) -> serde_json::Value {
+    fn drop_ids(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Object(map) => {
+                if map.get("id").is_some_and(|v| v.is_u64()) {
+                    map.remove("id");
+                }
+                map.values_mut().for_each(drop_ids);
+            }
+            serde_json::Value::Array(items) => items.iter_mut().for_each(drop_ids),
+            _ => {}
+        }
+    }
+    let mut value = serde_json::to_value(decoded).unwrap_or_default();
+    if matches!(decoded, RFileDecoded::BMDVegetation(_)) {
+        drop_ids(&mut value);
+    }
+    value
+}
+
+/// Encodes a decoded file of a JSON type (at `path` in a pack).
+fn encode_decoded(decoded: RFileDecoded, path: &str, game: &str) -> Result<Vec<u8>> {
+    let info = game_info(game)?;
+    let mut file = file_from_bytes(&[], path)?;
+    let context = format!("Could not encode {path}");
+    file.set_decoded(decoded).map_err(to_napi(&context))?;
+    Ok(no_panic(&context, || file.encode(&Some(EncodeableExtraData::new_from_game_info(info)), false, false, true))?
+        .map_err(to_napi(&context))?
+        .unwrap_or_default())
+}
+
+fn decode_with_game(file: &mut RFile, path: &str, game: &str) -> Result<RFileDecoded> {
+    let mut extra = DecodeableExtraData::default();
+    extra.set_game_info(Some(game_info(game)?));
+    no_panic(&format!("Could not decode {path}"), || file.decode(&Some(extra), false, true))?
+        .map_err(to_napi(&format!("Could not decode {path}")))?
+        .ok_or_else(|| Error::from_reason(format!("Could not decode {path}")))
+}
+
+/// Runs rpfm_lib code that can panic on data it does not expect (e.g. a
+/// matched combat participant without entities): a panic would abort the
+/// whole process, which is VS Code's extension host.
+fn no_panic<T>(context: &str, f: impl FnOnce() -> T) -> Result<T> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f))
+        .map_err(|_| Error::from_reason(format!("{context}: the file has values the format cannot hold")))
+}
+
+/// An `RFile` of `bytes` at `path` in a pack, with its type guessed from the path.
+fn file_from_bytes(bytes: &[u8], path: &str) -> Result<RFile> {
+    let mut file = RFile::new_from_vec(bytes, FileType::Unknown, 0, path);
+    file.guess_file_type().map_err(to_napi(&format!("Could not read {path}")))?;
+    Ok(file)
+}
+
+/// Decodes a structured binary file (portrait settings, anim tables, ...; the
+/// type comes from `pack_path`) to JSON. None for types that have no JSON form.
+#[napi]
+pub fn decode_to_json(bytes: Buffer, pack_path: String, game: String) -> Result<Option<DecodedJson>> {
+    decode_json_bytes(&bytes, &pack_path, &game)
+}
+
+/// Encodes JSON from `decodeToJson` back into the binary file. Refuses JSON
+/// that would not read back the same (a value the format cannot hold). Only
+/// for files `decodeToJson` says are editable.
+#[napi]
+pub fn encode_from_json(json: String, file_type: String, pack_path: String, game: String) -> Result<Buffer> {
+    encode_json(&json, &file_type, &pack_path, &game).map(Buffer::from)
+}
+
+fn encode_json(json: &str, file_type: &str, pack_path: &str, game: &str) -> Result<Vec<u8>> {
+    let decoded = from_json!(file_type, json, PortraitSettings, AnimsTable, MatchedCombat, Atlas,
+        AnimFragmentBattle, GroupFormations, BMD, BMDVegetation)
+        .map_err(to_napi("Invalid JSON"))?;
+    let file = file_from_bytes(&[], pack_path)?;
+    if format!("{:?}", file.file_type()) != file_type {
+        return Err(Error::from_reason(format!("{pack_path} is not a {file_type} file")));
+    }
+    let bytes = encode_decoded(decoded.clone(), pack_path, game)?;
+
+    let mut check = RFile::new_from_vec(&bytes, file.file_type(), 0, pack_path);
+    if comparable(&decode_with_game(&mut check, pack_path, game)?) != comparable(&decoded) {
+        return Err(Error::from_reason(format!("{pack_path}: the file would not read back as written; nothing was saved")));
+    }
+    Ok(bytes)
+}
+
+#[napi]
+impl PackHolder {
+    /// Decodes a structured binary file in the packs to JSON (see `decode_to_json`).
+    /// None when the pack has no such file or the type has no JSON form.
+    #[napi]
+    pub fn decode_to_json(&mut self, path: String, game: String) -> Result<Option<DecodedJson>> {
+        let Some(bytes) = self.read_bytes(path.clone())? else {
+            return Ok(None);
+        };
+        decode_json_bytes(&bytes, &path, &game)
+    }
+}
+
+#[cfg(test)]
+mod json_tests {
+    use super::*;
+
+    /// Encodes a file with rpfm_lib, the way the game's file would be.
+    fn encoded(decoded: RFileDecoded, path: &str) -> Vec<u8> {
+        let mut file = file_from_bytes(&[], path).unwrap();
+        file.set_decoded(decoded).unwrap();
+        file.encode(&Some(EncodeableExtraData::new_from_game_info(game_info("warhammer_3").unwrap())), false, false, true)
+            .unwrap()
+            .unwrap()
+    }
+
+    fn round_trip(bytes: &[u8], path: &str, file_type: &str) {
+        let decoded = decode_to_json(bytes.to_vec().into(), path.to_owned(), "warhammer_3".to_owned()).unwrap().expect("a JSON type");
+        assert_eq!(decoded.file_type, file_type);
+        assert!(decoded.editable);
+        let again = encode_from_json(decoded.json, decoded.file_type, path.to_owned(), "warhammer_3".to_owned()).unwrap();
+        assert_eq!(&again[..], bytes, "{path} round trip");
+    }
+
+    #[test]
+    fn portrait_settings_round_trip() {
+        let mut settings: rpfm_lib::files::portrait_settings::PortraitSettings = Default::default();
+        settings.set_version(4);
+        let path = "ui/portraits/portholes/portrait_settings_my_mod.bin";
+        round_trip(&encoded(RFileDecoded::PortraitSettings(settings), path), path, "PortraitSettings");
+    }
+
+    #[test]
+    fn real_files_round_trip() {
+        // Every JSON-type file of the game's own packs, when the game is installed:
+        // the editable ones must save back to their exact bytes.
+        let Ok(dir) = std::env::var("TW_GAME_DIR") else { return };
+        let packs = ca_pack_paths(dir, "warhammer_3".to_owned()).unwrap();
+        let mut holder = open_packs(packs, "warhammer_3".to_owned(), Some(true)).unwrap();
+        let mut stats: BTreeMap<String, [u32; 3]> = BTreeMap::new();
+        let mut reasons: BTreeMap<String, String> = BTreeMap::new();
+        for path in holder.paths() {
+            // The type comes from the path: read only those files (the game has 700,000).
+            let file_type = file_from_bytes(&[], &path).unwrap().file_type();
+            if !JSON_TYPES.contains(&file_type) {
+                continue;
+            }
+            let bytes = holder.read_bytes(path.clone()).unwrap().unwrap();
+            let entry = stats.entry(format!("{file_type:?}")).or_default();
+            match decode_json_bytes(&bytes, &path, "warhammer_3") {
+                Ok(Some(decoded)) if decoded.editable => {
+                    let again = encode_from_json(decoded.json, decoded.file_type, path.clone(), "warhammer_3".to_owned()).unwrap();
+                    assert_eq!(&again[..], &bytes[..], "{path} round trip");
+                    entry[0] += 1;
+                }
+                Ok(Some(decoded)) => {
+                    entry[1] += 1;
+                    reasons.entry(format!("{file_type:?}")).or_insert(format!("{path}: {}", decoded.read_only_reason.unwrap()));
+                }
+                _ => entry[2] += 1,
+            }
+        }
+        for (t, [editable, read_only, failed]) in &stats {
+            eprintln!("{t}: {editable} editable, {read_only} read only, {failed} not decodable");
+        }
+        for (t, r) in &reasons {
+            eprintln!("  e.g. {t} {r}");
+        }
+        assert!(stats.values().any(|s| s[0] > 0), "no files checked");
+    }
+
+    #[test]
+    fn bad_values_are_errors_not_panics() {
+        let json = r#"{"version":1,"entries":[{"id":"","participants":[{"team":0,"uk1":0,"uk2":0,"uk3":0,"uk4":0,"state":{"start":"Alive","end":"Alive"},"entity_info":[]}]}]}"#;
+        let e = encode_from_json(json.to_owned(), "MatchedCombat".to_owned(), "animations/matched_combat/x.bin".to_owned(), "warhammer_3".to_owned());
+        assert!(e.is_err());
+    }
+
+    #[test]
+    fn other_types_have_no_json() {
+        assert!(decode_to_json(b"x = 1".to_vec().into(), "script/x.lua".to_owned(), "warhammer_3".to_owned()).unwrap().is_none());
+    }
+}

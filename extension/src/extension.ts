@@ -1,7 +1,10 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
+import { registerAssetProviders } from './assets/assetProviders';
 import { CONNECTED_EVENT, TwLuaDebugSession, WAITING_EVENT } from './adapter/session';
+import { DecodedEditorProvider, openDecoded } from './decoded/DecodedEditorProvider';
+import { DECODED_SCHEME, DecodedFileSystemProvider } from './decoded/DecodedFileSystemProvider';
 import { DbEditorProvider, migrateModTable, newDbTable, newLocFile } from './db/DbEditorProvider';
 import { DbGridPanel } from './db/DbGridPanel';
 import { DbHoverProvider } from './db/dbHover';
@@ -12,6 +15,7 @@ import type { ClonePlan } from './db/cloneEntity';
 import { DbTreeProvider, tableOf } from './db/DbTreeProvider';
 import { DEBUG_TYPE, gameKeyFor, TwDebugConfigurationProvider } from './debugConfig';
 import { installDebuggerMod, prepareDebuggerMod } from './installMod';
+import { copyToMod } from './modProject';
 import { isModWorkspace, LuaApiService, offerLuaSetup } from './lua/luaLanguage';
 import { DbKeyLinkProvider, TwLuaCompletionProvider } from './lua/luaProviders';
 import { GameTools } from './runtime/gameTools';
@@ -46,6 +50,8 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 	const dbTree = new DbTreeProvider(db, log);
 	const luaApi = new LuaApiService(context.globalStorageUri.fsPath, sources, log);
 	const modDiagnostics = new ModDiagnostics(db, log, isModWorkspace);
+	const assets = registerAssetProviders(sources);
+	const decoded = new DecodedFileSystemProvider(sources);
 	const dbEditor = new DbEditorProvider(db, context.extensionUri, log);
 	const configProvider = new TwDebugConfigurationProvider((config) => {
 		sources.configure({
@@ -105,6 +111,16 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 			addVirtualFolder(true);
 		}),
 		vscode.commands.registerCommand('totalwar.filterVirtualFiles', () => filterVirtualFiles()),
+		...assets.disposables,
+		vscode.workspace.registerFileSystemProvider(DECODED_SCHEME, decoded, { isCaseSensitive: false }),
+		vscode.window.registerCustomEditorProvider(DecodedEditorProvider.viewType, new DecodedEditorProvider(decoded)),
+		vscode.commands.registerCommand('totalwar.openDecoded', (target?: vscode.Uri) => {
+			const uri = target ?? vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+			const source = uri instanceof vscode.Uri ? uri : uri instanceof vscode.TabInputCustom || uri instanceof vscode.TabInputText ? uri.uri : undefined;
+			return source && openDecoded(decoded, source).then(undefined, (e: Error) => vscode.window.showErrorMessage(e.message));
+		}),
+		vscode.commands.registerCommand('totalwar.copyToMod', (target?: vscode.Uri) => copyToMod(sources, db, target).catch(
+			(e: Error) => vscode.window.showErrorMessage(e.message))),
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration('totalwar.virtualFiles.exclude')) {
 				sources.refilter().then(
@@ -131,11 +147,11 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		modDiagnostics,
 		new GameTools(db, context.extensionUri),
 		vscode.commands.registerCommand('totalwar.checkMod', () => vscode.window.withProgress(
-			{ location: vscode.ProgressLocation.Notification, title: 'Checking the mod\'s DB tables and loc files…' },
-			() => modDiagnostics.run()).then(
+			{ location: vscode.ProgressLocation.Notification, title: 'Checking the mod\'s DB tables, loc files and asset paths…' },
+			async () => await modDiagnostics.run() + await assets.diagnostics.checkWorkspace()).then(
 			(n) => {
 				void vscode.commands.executeCommand('workbench.actions.view.problems');
-				void vscode.window.showInformationMessage(n ? `${n} problem(s) in the mod's DB tables and loc files.` : 'No problems found in the mod\'s DB tables and loc files.');
+				void vscode.window.showInformationMessage(n ? `${n} problem(s) in the mod's DB tables, loc files and asset paths.` : 'No problems found in the mod\'s DB tables, loc files and asset paths.');
 			},
 			(e: Error) => vscode.window.showErrorMessage(e.message))),
 		vscode.commands.registerCommand('totalwar.showModConflicts', () => vscode.window.withProgress(

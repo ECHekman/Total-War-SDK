@@ -127,7 +127,7 @@
 			},
 			{
 				"command": "totalwar.checkMod",
-				"title": "Check Mod DB Tables and Loc Files",
+				"title": "Check Mod DB Tables, Loc Files and Asset Paths",
 				"category": "TotalWar"
 			},
 			{
@@ -156,6 +156,18 @@
 				"title": "Filter Virtual Files…",
 				"category": "TotalWar",
 				"icon": "$(filter)"
+			},
+			{
+				"command": "totalwar.copyToMod",
+				"title": "Copy to Mod",
+				"category": "TotalWar",
+				"icon": "$(arrow-down)"
+			},
+			{
+				"command": "totalwar.openDecoded",
+				"title": "Open as JSON",
+				"category": "TotalWar",
+				"icon": "$(json)"
 			},
 			{
 				"command": "totalwar.toggleEventMonitor",
@@ -330,6 +342,16 @@
 					"command": "totalwar.filterVirtualFiles",
 					"when": "explorerResourceIsFolder && resourceScheme == totalwar",
 					"group": "navigation@11"
+				},
+				{
+					"command": "totalwar.copyToMod",
+					"when": "!explorerResourceIsFolder && resourceScheme == totalwar",
+					"group": "navigation@11"
+				},
+				{
+					"command": "totalwar.openDecoded",
+					"when": "!explorerResourceIsFolder && resourcePath =~ /(portrait_settings[^\\/]*\\.bin|[\\/]animations[\\/].*\\.bin|\\.atlas|\\.frg|groupformations\\.bin|\\.bmd|\\.vegetation)$/i",
+					"group": "navigation@12"
 				}
 			],
 			"editor/context": [
@@ -392,6 +414,21 @@
 				{
 					"command": "totalwar.stopProfiler",
 					"when": "totalwar.profiling"
+				},
+				{
+					"command": "totalwar.copyToMod",
+					"when": "resourceScheme == totalwar"
+				},
+				{
+					"command": "totalwar.openDecoded",
+					"when": "false"
+				}
+			],
+			"editor/title": [
+				{
+					"command": "totalwar.copyToMod",
+					"when": "resourceScheme == totalwar",
+					"group": "navigation"
 				}
 			]
 		},
@@ -551,7 +588,7 @@
 				"totalwar.modDiagnostics": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "In mod projects, check the DB tables and loc files in the workspace and list problems in the Problems view: tables of an older version than the game's, references to keys that do not exist, repeated keys, new rows without loc text. **TotalWar: Check Mod DB Tables and Loc Files** checks now."
+					"markdownDescription": "In mod projects, check the DB tables and loc files in the workspace and list problems in the Problems view: tables of an older version than the game's, references to keys that do not exist, repeated keys, new rows without loc text. **TotalWar: Check Mod DB Tables, Loc Files and Asset Paths** checks now."
 				},
 				"totalwar.dbCompletion": {
 					"type": "boolean",
@@ -749,6 +786,74 @@
 				}
 			}
 		],
+		"languages": [
+			{
+				"id": "xml",
+				"extensions": [
+					".variantmeshdefinition",
+					".wsmodel",
+					".material",
+					".xml.material",
+					".xml.shader",
+					".shader",
+					".environment",
+					".environment_group",
+					".environment_group.override",
+					".benchmark",
+					".cindyscene",
+					".cindyscenemanager",
+					".kfa",
+					".kfc",
+					".kfe",
+					".kfe_temp",
+					".kfl",
+					".kfl_temp",
+					".kfsl",
+					".kfp",
+					".kfcs",
+					".kfcs_temp",
+					".ktr",
+					".ktr_temp",
+					".lighting",
+					".model_statistics",
+					".mvscene",
+					".sbs",
+					".technique",
+					".xml_temp"
+				]
+			},
+			{
+				"id": "lua",
+				"extensions": [
+					".battle_script",
+					".twui"
+				]
+			},
+			{
+				"id": "hlsl",
+				"extensions": [
+					".fx_fragment"
+				]
+			},
+			{
+				"id": "cpp",
+				"extensions": [
+					".glsl"
+				]
+			},
+			{
+				"id": "plaintext",
+				"extensions": [
+					".agf",
+					".battle_speech_camera",
+					".bob",
+					".cco",
+					".tai",
+					".texture_array",
+					".xt"
+				]
+			}
+		],
 		"customEditors": [
 			{
 				"viewType": "totalwar.dbEditor",
@@ -765,6 +870,55 @@
 					}
 				],
 				"priority": "default"
+			},
+			{
+				"viewType": "totalwar.decodedEditor",
+				"displayName": "Total War File as JSON",
+				"selector": [
+					{
+						"filenamePattern": "**/*portrait_settings*.bin"
+					},
+					{
+						"filenamePattern": "**/animations/**/*_tables.bin"
+					},
+					{
+						"filenamePattern": "**/animations/matched_combat/**/*.bin"
+					},
+					{
+						"filenamePattern": "**/animations/database/matched/**/*.bin"
+					},
+					{
+						"filenamePattern": "**/animations/database/trigger/**/*.bin"
+					},
+					{
+						"filenamePattern": "**/animations/**/battle/**/*.bin"
+					},
+					{
+						"filenamePattern": "**/*.frg"
+					},
+					{
+						"filenamePattern": "**/*.bmd"
+					},
+					{
+						"filenamePattern": "**/*.vegetation"
+					}
+				],
+				"priority": "default"
+			}
+		],
+		"jsonValidation": [
+			{
+				"fileMatch": [
+					"*portrait_settings*.bin.json"
+				],
+				"url": "./jsonSchemas/portrait_settings.schema.json"
+			},
+			{
+				"fileMatch": [
+					"**/animations/**/battle/**/*.bin.json",
+					"*.frg.json"
+				],
+				"url": "./jsonSchemas/anim_fragment_battle.schema.json"
 			}
 		]
 	},

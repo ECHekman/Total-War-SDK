@@ -3,9 +3,10 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 
 import { normalizeKey, VIRTUAL_SCHEME, VirtualSources } from './adapter/pathMapper';
+import { textLanguage } from './fileTypes';
 import { gameByKey } from './games';
 import { byPriority, parseModList, resolveModPacks } from './modList';
-import { DirTree, PackHolder, rpfm } from './rpfm';
+import { DirEntry, DirTree, PackHolder, rpfm } from './rpfm';
 import { findGameExecutable } from './steam';
 
 export interface SourceConfig {
@@ -29,6 +30,8 @@ interface PackSource {
 	files: Map<string, string>;
 	/** Its folders as listed (`totalwar.virtualFiles.exclude` applied). */
 	tree: DirTree;
+	/** All its folders, unfiltered (asset path completion); built on first use. */
+	fullTree?: Promise<DirTree>;
 }
 
 /** Glob patterns of pack files to leave out of the listing (setting `totalwar.virtualFiles.exclude`). */
@@ -302,6 +305,62 @@ export class LiveSourceFS implements vscode.FileSystemProvider, VirtualSources, 
 		return this.sources.map((s) => ({ label: s.folder.replace(`${MODS_FOLDER}/`, ''), holder: s.holder }));
 	}
 
+	/**
+	 * The pack file a `totalwar:` URI shows: its path in the pack (in the case
+	 * of the URI) and its bytes as stored. Undefined for folders and unknown paths.
+	 */
+	async packFile(uri: vscode.Uri): Promise<{ pack: string; path: string; bytes: Buffer } | undefined> {
+		await this.ready();
+		const at = this.resolve(LiveSourceFS.key(uri));
+		if (at?.kind !== 'pack' || !at.inner) {
+			return undefined;
+		}
+		const bytes = at.source.holder.readBytes(at.inner);
+		if (!bytes) {
+			return undefined;
+		}
+		const inPack = uri.path.replace(/^\/+/, '').slice(at.source.folder.length + 1);
+		return { pack: at.source.folder.replace(`${MODS_FOLDER}/`, ''), path: inPack, bytes };
+	}
+
+	/**
+	 * Where the game finds a file (a pack path, any case, `/` separated): the
+	 * first pack in priority order that has it. Undefined when none has it or
+	 * the packs are not loaded (see `configured`).
+	 */
+	async locate(packPath: string): Promise<{ uri: vscode.Uri; pack: string } | undefined> {
+		await this.ready();
+		for (const source of this.sources) {
+			if (source.holder.hasFile(packPath)) {
+				return {
+					uri: vscode.Uri.from({ scheme: VIRTUAL_SCHEME, path: `/${source.folder}/${packPath}` }),
+					pack: source.folder.replace(`${MODS_FOLDER}/`, ''),
+				};
+			}
+		}
+		return undefined;
+	}
+
+	/** Whether the packs are loaded (so a file that `locate` misses is really missing). */
+	get loadedPacks(): boolean {
+		return this.loaded && this.sources.length > 0;
+	}
+
+	/** The files and folders in a pack folder (any case; `""` for the root) over all packs, unfiltered. */
+	async listPackDir(dir: string): Promise<DirEntry[]> {
+		await this.ready();
+		const seen = new Map<string, DirEntry>();
+		for (const source of this.sources) {
+			source.fullTree ??= source.holder.dirTreeAsync();
+			for (const entry of (await source.fullTree).listDir(dir) ?? []) {
+				if (!seen.has(entry.name.toLowerCase())) {
+					seen.set(entry.name.toLowerCase(), entry);
+				}
+			}
+		}
+		return [...seen.values()];
+	}
+
 	// ---- VirtualSources (used by the debug adapter) ---------------------------
 
 	uriFor(key: string): string | undefined {
@@ -360,20 +419,27 @@ export class LiveSourceFS implements vscode.FileSystemProvider, VirtualSources, 
 		await this.ready();
 		const at = this.resolve(LiveSourceFS.key(uri));
 		if (at?.kind === 'pack' && at.inner) {
-			if (/\.lua$/i.test(at.inner)) {
-				const text = at.source.holder.readText(at.inner);
-				if (text !== null) {
-					return new TextEncoder().encode(text);
-				}
-			} else {
-				// As stored: DB tables go to the DB table editor, other types to whatever handles them.
-				const bytes = at.source.holder.readBytes(at.inner);
-				if (bytes) {
-					return bytes;
-				}
+			const text = textLanguage(at.inner) ? this.decodedText(at.source, at.inner) : undefined;
+			if (text !== undefined) {
+				return new TextEncoder().encode(text);
+			}
+			// As stored: DB tables go to the DB table editor, other types to whatever handles them.
+			const bytes = at.source.holder.readBytes(at.inner);
+			if (bytes) {
+				return bytes;
 			}
 		}
 		throw vscode.FileSystemError.FileNotFound(uri);
+	}
+
+	/** A text file decoded by RPFM (UTF-16 and ISO-8859-15 files too); undefined when it cannot decode it. */
+	private decodedText(source: PackSource, inner: string): string | undefined {
+		try {
+			return source.holder.readText(inner) ?? undefined;
+		} catch (e) {
+			this.log.appendLine(`Could not decode ${source.folder}/${inner} as text: ${(e as Error).message}`);
+			return undefined;
+		}
 	}
 
 	watch(): vscode.Disposable {

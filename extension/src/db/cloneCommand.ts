@@ -6,6 +6,7 @@ import { DbDocument, DbEditorProvider, encodeModFile, LOC_FIELDS, readModFile } 
 import { DbService } from './DbService';
 import { Cell, DbTableModel } from './dbTableModel';
 import { ClonePlan, planClone } from './cloneEntity';
+import { modPackFolder } from '../modProject';
 
 /** Tables offered first: the usual starting points of a new entity. */
 const COMMON_TABLES = [
@@ -123,14 +124,6 @@ async function pickParts(plan: ClonePlan, key: string, newKey: string): Promise<
 		loc: picked.some((p) => p.loc) ? plan.loc : [],
 		skipped: plan.skipped,
 	};
-}
-
-/** The workspace's pack folder (the one the pack task packs). */
-function modPackFolder(): string | undefined {
-	return (vscode.workspace.workspaceFolders ?? [])
-		.filter((f) => f.uri.scheme === 'file')
-		.map((f) => path.join(f.uri.fsPath, 'pack'))
-		.find((p) => fs.existsSync(p));
 }
 
 /** An existing file of the mod among `candidates`, else the first in the format of new files. */

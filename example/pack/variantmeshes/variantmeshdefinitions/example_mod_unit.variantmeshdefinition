@@ -1,0 +1,11 @@
+<VARIANT_MESH>
+	<!-- Ctrl+click a path to open it; hover to see which pack it comes from. -->
+	<SLOT name="body">
+		<VARIANT_MESH model="variantmeshes/_variantmodels/bigcat03c/vmp/vmp_dread_abyssal/vmp_dread_abyssal_proxy.rigid_model_v2" mask_image="variantmeshes/_variantmodels/lizard03/dae/dae_basilisk/tex/dae_basilisk_01_base_colour.dds"/>
+		<VARIANT_MESH model="variantmeshes/example_mod/example_mod_body.wsmodel"/>
+	</SLOT>
+	<SLOT name="head">
+		<!-- This file does not exist: it gets a warning. -->
+		<VARIANT_MESH model="variantmeshes/example_mod/missing_head.rigid_model_v2"/>
+	</SLOT>
+</VARIANT_MESH>

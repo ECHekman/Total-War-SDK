@@ -25,6 +25,8 @@ export declare class PackHolder {
 	locPaths(): string[];
 	/** Decodes a loc file. Null when the pack has no such file. */
 	decodeLoc(path: string): LocRow[] | null;
+	/** Decodes a structured binary file to JSON (see `decodeToJson`). Null when the pack has no such file or it has no JSON form. */
+	decodeToJson(path: string, game: string): DecodedJson | null;
 }
 
 /** The folders of a pack, possibly filtered (see `PackHolder.dirTreeAsync`). */
@@ -151,3 +153,31 @@ export declare function caPackPaths(gamePath: string, game: string): string[];
 
 /** Game keys rpfm knows about (warhammer_3, three_kingdoms, ...). */
 export declare function supportedGameKeys(): string[];
+
+/** A structured binary file decoded to JSON (see `decodeToJson`). */
+export interface DecodedJson {
+	/** RPFM's name of the type, e.g. `PortraitSettings`; pass it to `encodeFromJson`. */
+	fileType: string;
+	/** The decoded file, pretty printed. */
+	json: string;
+	/**
+	 * Whether the file can be saved from its JSON: saving the JSON unchanged
+	 * gives back its exact bytes (RPFM reads all of it). Checked per file.
+	 */
+	editable: boolean;
+	/** Why it cannot be saved, when it cannot. */
+	readOnlyReason?: string | null;
+}
+
+/**
+ * Decodes a structured binary file to JSON; the type comes from `packPath`
+ * (portrait settings, anim tables, matched combat, atlas, anim fragments,
+ * group formations, BMD, vegetation). Null for other types.
+ */
+export declare function decodeToJson(bytes: Buffer, packPath: string, game: string): DecodedJson | null;
+/**
+ * Encodes JSON from `decodeToJson` back into the binary file (only for files
+ * it says are editable). Throws for invalid JSON and for values that would not
+ * read back the same.
+ */
+export declare function encodeFromJson(json: string, fileType: string, packPath: string, game: string): Buffer;

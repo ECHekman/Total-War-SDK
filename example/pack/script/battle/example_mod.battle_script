@@ -1,0 +1,2 @@
+-- A .battle_script file opens as Lua.
+out("example_mod battle script loaded")

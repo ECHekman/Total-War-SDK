@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { planClone } from '../../../src/db/cloneEntity';
 import { DbTableModel } from '../../../src/db/dbTableModel';
 import type { TwLuaDebuggerApi } from '../../../src/extension';
+import type { RpfmModule } from '../../../src/rpfm';
 
 const extensionRoot = path.resolve(__dirname, '..', '..', '..', '..');
 const lua = path.join(extensionRoot, '.tools', 'lua51', process.platform === 'win32' ? 'lua51.exe' : 'lua51');
@@ -215,6 +216,67 @@ describe('Total War Modding Tools extension', () => {
 		assert.ok(doc?.model, doc?.error ?? 'not opened');
 		assert.ok(doc.model.rows.length > 50);
 		assert.equal(doc.readOnly, true);
+		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+	});
+
+	it('opens the game\'s text files in their language, links their assets and copies them into the mod', async function () {
+		if (!fs.existsSync(path.join(wh3, 'data', 'data.pack'))) {
+			this.skip();
+		}
+		this.timeout(120000);
+		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
+		const folder = vscode.Uri.parse('totalwar:/@basegame/variantmeshes/variantmeshdefinitions');
+		const name = (await vscode.workspace.fs.readDirectory(folder)).map(([n]) => n).find((n) => n.endsWith('.variantmeshdefinition'));
+		assert.ok(name, 'no variant mesh definition');
+		const vmd = vscode.Uri.joinPath(folder, name);
+		const doc = await vscode.workspace.openTextDocument(vmd);
+		assert.equal(doc.languageId, 'xml');
+		const links = await vscode.commands.executeCommand<vscode.DocumentLink[]>('vscode.executeLinkProvider', vmd);
+		assert.ok(links.some((l) => l.target?.scheme === 'totalwar'), `no asset links in ${name}`);
+
+		const pack = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, 'pack');
+		fs.mkdirSync(pack);
+		try {
+			await vscode.commands.executeCommand('totalwar.copyToMod', vmd);
+			const copy = path.join(pack, 'variantmeshes', 'variantmeshdefinitions', name);
+			assert.deepEqual(fs.readFileSync(copy), Buffer.from((await api.sources.packFile(vmd))!.bytes));
+		} finally {
+			await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+			fs.rmSync(pack, { recursive: true, force: true });
+		}
+	});
+
+	it('edits portrait settings as JSON and saves them as binary', async function () {
+		if (!fs.existsSync(path.join(wh3, 'data', 'data.pack'))) {
+			this.skip();
+		}
+		this.timeout(120000);
+		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
+		const game = await api.sources.packFile(vscode.Uri.parse('totalwar:/@basegame/ui/portraits/portholes/portrait_settings__.bin'));
+		assert.ok(game, 'no portrait settings in the game');
+		const file = vscode.Uri.file(path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'twps-')), 'portrait_settings_test.bin'));
+		fs.writeFileSync(file.fsPath, game.bytes);
+
+		await vscode.commands.executeCommand('vscode.openWith', file, 'totalwar.decodedEditor');
+		let doc: vscode.TextDocument | undefined;
+		for (let i = 0; i < 100 && !(doc = vscode.workspace.textDocuments.find((d) => d.uri.scheme === 'totalwar-decoded')); i++) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+		assert.ok(doc, 'JSON not opened');
+		assert.equal(doc.languageId, 'json');
+		const fov = /"fov": 30\.0/.exec(doc.getText());
+		assert.ok(fov, 'no fov of 30');
+		const edit = new vscode.WorkspaceEdit();
+		edit.replace(doc.uri, new vscode.Range(doc.positionAt(fov.index), doc.positionAt(fov.index + fov[0].length)), '"fov": 31.5');
+		assert.ok(await vscode.workspace.applyEdit(edit));
+		assert.ok(await doc.save(), 'not saved');
+
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const rpfm = require(path.join(extensionRoot, 'native', 'rpfm-interface.node')) as RpfmModule;
+		const saved = JSON.parse(rpfm.decodeToJson(fs.readFileSync(file.fsPath), 'portrait_settings_test.bin', 'warhammer_3')!.json) as
+			{ entries: { camera_settings_head: { fov: number }; camera_settings_body: { fov: number } | null }[] };
+		const fovs = saved.entries.flatMap((e) => [e.camera_settings_head.fov, e.camera_settings_body?.fov]);
+		assert.equal(fovs.filter((f) => f === 31.5).length, 1);
 		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 	});
 

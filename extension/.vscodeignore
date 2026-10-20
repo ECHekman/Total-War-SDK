@@ -4,6 +4,7 @@
 !native/*.exe
 !native/*.dll
 !schemas/*.ron
+!jsonSchemas/*.json
 !media/**
 !debuggee/**
 !images/icon.png
