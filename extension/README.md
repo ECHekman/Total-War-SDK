@@ -61,8 +61,13 @@ Every file in the game's packs and in the mods in your mod list is available
 as the read-only `totalwar:/` file system:
 - `@basegame/` holds the game's own files and `@mods/<pack>/` holds each mod's
   files, so you can see where a file comes from.
-- Lua files open as text, DB tables (`db/<table>/<file>`) open read-only in the
-  table editor, and other files open in whatever editor you have for them.
+- Text files (Lua, XML, `.variantmeshdefinition`, `.wsmodel`, `.material`, ...)
+  open as text in their language, also when the game stores them as UTF-16.
+  DB tables (`db/<table>/<file>`) open read-only in the table editor, and other
+  files open in whatever editor you have for them.
+- **TotalWar: Copy to Mod** (context menu and editor title of a virtual file)
+  copies the file into your mod's `pack` folder at the same path, ready to edit.
+  For a DB table it offers to copy one entity instead of the whole table.
 - Stack frames open the copy the game actually runs: the first mod in the mod
   list that has the file, otherwise the game's own. A local copy is preferred
   when there is one, and a breakpoint in any copy stops in the copy that runs.
@@ -84,6 +89,26 @@ animations, models, textures and so on. Folders left empty disappear. The
 command writes the `totalwar.virtualFiles.exclude` setting, which also accepts
 your own glob patterns (`*.wem`, `ui/skins/**`). Hidden files still open from
 the debugger and from links.
+
+### Models, materials and other game files
+- **Asset paths** in variant mesh definitions, wsmodels, materials and other XML
+  files (`variantmeshes/.../x.rigid_model_v2`, `.dds`, `.anim`, ...) are links:
+  Ctrl+click opens the copy the game uses, from your mod or the packs, and
+  hovering one tells which pack it comes from. Paths complete folder by folder
+  as you type (or with Ctrl+Space after the quote). Paths in your mod that point
+  at no file get a warning.
+- **Binary files as JSON**: portrait settings (`portrait_settings*.bin`), battle
+  animation fragments (`animations/database/battle/bin/*.bin`), anim tables,
+  matched combat files, battle map definitions (`.bmd`) and vegetation open as JSON in a normal text editor,
+  with validation and field descriptions for portrait settings and animation
+  fragments. Saving writes the binary file again; a value the format cannot hold
+  is refused instead of saved. When a file opens, the extension checks that
+  saving it unchanged gives back the exact same bytes, so nothing RPFM does not
+  understand can be lost; a file that fails the check opens read only and says
+  why (in WARHAMMER III every file that decodes passes). **TotalWar: Open as
+  JSON** in the Explorer's context menu also tries `.atlas` and
+  `groupformations.bin`. A BMD (or a part of one) in a version RPFM does not
+  know, about one in ten of the game's, only opens in the default editor.
 
 ### Game Database
 The DB tables (units, buildings, effects, ...) show the values the game uses
@@ -146,7 +171,7 @@ fallback. Point `totalwar.dbSchemaPath` at RPFM's schemas folder to use your own
 ### Mod checks
 In a mod project, the Problems view checks the mod's tables and loc files
 against the game and the mod list (`totalwar.modDiagnostics`, or run **TotalWar:
-Check Mod DB Tables and Loc Files**). It reports:
+Check Mod DB Tables, Loc Files and Asset Paths**). It reports:
 - table versions older than the game's, which crash the game. **TotalWar:
   Migrate DB Table to the Game's Version** rewrites the table; it is also in
   the Explorer's context menu;

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<material>
+	<name>example_mod_body</name>
+	<shader>shaders/weighted4_character.xml.shader</shader>
+	<textures>
+		<texture slot="base_colour">variantmeshes/_variantmodels/lizard03/dae/dae_basilisk/tex/dae_basilisk_01_base_colour.dds</texture>
+		<!-- Missing texture: gets a warning. -->
+		<texture slot="normal">variantmeshes/example_mod/tex/example_mod_body_normal.dds</texture>
+	</textures>
+</material>

@@ -1,0 +1,51 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Battle animation fragment",
+	"description": "An animations/database/battle/bin/*.bin (or .frg) file: which animations a skeleton plays for each animation slot in battle.",
+	"type": "object",
+	"required": ["version", "entries"],
+	"properties": {
+		"version": { "description": "File format version: 4 in WARHAMMER III, 2 in WARHAMMER II, Three Kingdoms and Troy.", "type": "integer" },
+		"subversion": { "description": "Minor format version.", "type": "integer" },
+		"skeleton_name": { "description": "Skeleton the animations are for, e.g. hu1.", "type": "string" },
+		"table_name": { "description": "Name of this fragment, as other files refer to it.", "type": "string" },
+		"mount_table_name": { "description": "Fragment of the mount, for riders.", "type": "string" },
+		"unmount_table_name": { "description": "Fragment used when dismounted.", "type": "string" },
+		"locomotion_graph": { "description": "Pack path of the locomotion graph (.xml).", "type": "string" },
+		"is_simple_flight": { "type": "boolean" },
+		"is_new_cavalry_tech": { "type": "boolean" },
+		"min_id": { "type": "integer" },
+		"max_id": { "type": "integer" },
+		"entries": {
+			"description": "One entry per animation slot.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"animation_id": { "description": "Animation slot id.", "type": "integer" },
+					"blend_in_time": { "description": "Blend time into this animation, in seconds.", "type": "number" },
+					"selection_weight": { "description": "Relative chance of picking this entry among entries of the same slot.", "type": "number" },
+					"weapon_bone": { "description": "Weapon bones used, e.g. \"WEAPON_BONE_1 | WEAPON_BONE_2\"; empty for none.", "type": "string" },
+					"anim_refs": {
+						"description": "The animation files, with their metadata.",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"file_path": { "description": "Pack path of the .anim file.", "type": "string" },
+								"meta_file_path": { "description": "Pack path of the .anm.meta file (events, splices).", "type": "string" },
+								"snd_file_path": { "description": "Pack path of the .snd.meta file (sounds).", "type": "string" }
+							}
+						}
+					},
+					"slot_id": { "type": "integer" },
+					"filename": { "type": "string" },
+					"metadata": { "type": "string" },
+					"metadata_sound": { "type": "string" },
+					"skeleton_type": { "type": "string" },
+					"single_frame_variant": { "type": "boolean" }
+				}
+			}
+		}
+	}
+}

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### New
+- Text files in the packs open in their language (XML for variant mesh
+  definitions, wsmodels, materials and the other formats RPFM reads as text),
+  decoded by RPFM, so UTF-16 files read correctly.
+- **TotalWar: Copy to Mod** copies a file from the virtual files into the mod's
+  `pack` folder at the same path.
+- Asset paths in XML files are links with hovers and folder-by-folder
+  completion; paths in the mod that point at no file are reported, also by
+  **TotalWar: Check Mod DB Tables, Loc Files and Asset Paths**.
+- Portrait settings, battle animation fragments, anim tables, matched combat,
+  BMD and vegetation files open as JSON, with JSON schemas for portrait settings and
+  animation fragments, and save back to binary. A file is editable when saving
+  it unchanged gives back its exact bytes (checked on opening), otherwise read
+  only; saves are checked by reading them back.
+
 ## 2.0.0
 
 The first release of **Total War Modding Tools**, the successor to the TW Lua

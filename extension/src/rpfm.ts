@@ -2,7 +2,7 @@ import * as path from 'node:path';
 
 import type * as Rpfm from '../../rpfm-interface/rpfm-interface';
 
-export type { DbSchema, DirTree, PackHolder } from '../../rpfm-interface/rpfm-interface';
+export type { DbSchema, DirEntry, DirTree, PackHolder } from '../../rpfm-interface/rpfm-interface';
 export type RpfmModule = typeof Rpfm;
 
 let cached: RpfmModule | undefined;
