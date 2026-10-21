@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { createProjectFiles, isValidModName, TEMPLATE_EXECUTABLE, TEMPLATE_MOD_NAME } from '../../src/createProject';
+import { createProjectFiles, isValidModName, modNameForPack, TEMPLATE_EXECUTABLE, TEMPLATE_MOD_NAME } from '../../src/createProject';
 import { listSaveGames } from '../../src/saves';
 
 const exampleDir = path.resolve(__dirname, '..', '..', '..', '..', 'example');
@@ -39,6 +39,29 @@ describe('example project', () => {
 		}
 		assert.match(fs.readFileSync(path.join(target, 'pack', 'script', 'campaign', 'mod', 'karls_mod.lua'), 'utf8'),
 			/local mod_name = "karls_mod"/);
+	});
+
+	it('copies binary files byte for byte and can leave out the example mod files', () => {
+		const template = path.join(dir, 'template');
+		const bytes = Buffer.from([0xff, 0xfe, 0x00, 0x80, ...Buffer.from('example_mod'), 0xc3]);
+		fs.mkdirSync(path.join(template, 'pack', 'ui'), { recursive: true });
+		fs.writeFileSync(path.join(template, 'pack', 'ui', 'portrait_settings_example_mod.bin'), bytes);
+		fs.writeFileSync(path.join(template, 'example_mod.code-workspace'), '{"folders": [{"path": "."}], "x": "example_mod"}');
+		const target = path.join(dir, 'new');
+		createProjectFiles(template, target, 'karls_mod', 'C:/x.exe');
+		assert.deepEqual(fs.readFileSync(path.join(target, 'pack', 'ui', 'portrait_settings_karls_mod.bin')), bytes);
+		assert.match(fs.readFileSync(path.join(target, 'karls_mod.code-workspace'), 'utf8'), /"x": "karls_mod"/);
+
+		const empty = path.join(dir, 'empty');
+		createProjectFiles(template, empty, 'karls_mod', 'C:/x.exe', { packContents: false });
+		assert.deepEqual(fs.readdirSync(path.join(empty, 'pack')), []);
+		assert.ok(fs.existsSync(path.join(empty, 'karls_mod.code-workspace')));
+	});
+
+	it('names a project after its pack', () => {
+		assert.equal(modNameForPack('C:/data/!!my_mod.pack'), 'my_mod');
+		assert.equal(modNameForPack('D:/x/Cool Mod (v2).PACK'), 'Cool_Mod_v2');
+		assert.equal(modNameForPack('---.pack'), 'my_mod');
 	});
 
 	it('refuses bad names and non-empty folders', () => {

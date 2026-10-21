@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 import { VIRTUAL_SCHEME } from './adapter/pathMapper';
 import { cloneEntityCommand } from './db/cloneCommand';
+import { DECODED_SCHEME, DecodedFileSystemProvider } from './decoded/DecodedFileSystemProvider';
 import { DbService } from './db/DbService';
 import { isDbTablePath } from './fileTypes';
 import { LiveSourceFS } from './SourceFileSystemProvider';
@@ -22,7 +23,10 @@ export function modPackFolder(): string | undefined {
  * stored in the pack, and opens the copy. The mod's copy then overrides it.
  */
 export async function copyToMod(sources: LiveSourceFS, db: DbService, target?: vscode.Uri): Promise<void> {
-	const uri = target ?? vscode.window.activeTextEditor?.document.uri ?? activeTabUri();
+	let uri = target ?? vscode.window.activeTextEditor?.document.uri ?? activeTabUri();
+	if (uri?.scheme === DECODED_SCHEME) {
+		uri = DecodedFileSystemProvider.sourceOf(uri); // the JSON view of a game file: copy the file itself
+	}
 	if (!uri || uri.scheme !== VIRTUAL_SCHEME) {
 		void vscode.window.showErrorMessage('Pick a file in the Virtual TW Source Files to copy into the mod.');
 		return;

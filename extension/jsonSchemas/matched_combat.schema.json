@@ -1,0 +1,100 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Matched combat",
+	"description": "An animations/matched_combat (or database/matched, database/trigger) .bin file: paired animations, such as one unit killing another. WARHAMMER III's version 1 only stores each participant's team, start and end state, uk3, uk4, and the animation and mount file of its first entity; the other fields must stay as they are (empty id, weight and blend time 0), or saving is refused.",
+	"type": "object",
+	"required": ["version", "entries"],
+	"additionalProperties": false,
+	"properties": {
+		"version": { "description": "File format version: 1 in WARHAMMER III and Three Kingdoms (different layouts), 3 in later games.", "type": "integer" },
+		"entries": {
+			"description": "One entry per matched animation.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["id", "participants"],
+				"additionalProperties": false,
+				"properties": {
+					"id": { "description": "Name of the matched animation (not stored in WARHAMMER III files).", "type": "string" },
+					"participants": {
+						"description": "The units taking part, usually two.",
+						"type": "array",
+						"items": { "$ref": "#/definitions/participant" }
+					}
+				}
+			}
+		}
+	},
+	"definitions": {
+		"state": {
+			"description": "Whether the participant is alive or dead.",
+			"enum": ["Alive", "Dead", "NoIdea1", "NoIdea2", "NoIdea3", "NoIdea4", "NoIdea5"]
+		},
+		"participant": {
+			"type": "object",
+			"required": ["team", "entity_info", "state", "uk1", "uk2", "uk3", "uk4"],
+			"additionalProperties": false,
+			"properties": {
+				"team": { "description": "Team of the participant (0 or 1).", "type": "integer" },
+				"entity_info": {
+					"description": "The participant's possible animations, each with a selection weight. WARHAMMER III stores exactly one, with one entity.",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"required": ["entities", "selection_weight"],
+						"additionalProperties": false,
+						"properties": {
+							"selection_weight": { "description": "Relative chance of picking this bundle (not stored in WARHAMMER III files).", "type": "number" },
+							"entities": {
+								"type": "array",
+								"minItems": 1,
+								"items": {
+									"type": "object",
+									"required": ["animation_filename", "metadata_filenames", "blend_in_time", "equipment_display", "filters", "uk", "mount_filename"],
+									"additionalProperties": false,
+									"properties": {
+										"animation_filename": { "description": "Pack path of the .anim file.", "type": "string" },
+										"metadata_filenames": { "description": "Pack paths of .meta files (not stored in WARHAMMER III files).", "type": "array", "items": { "type": "string" } },
+										"blend_in_time": { "description": "Blend time into the animation, in seconds (not stored in WARHAMMER III files).", "type": "number" },
+										"equipment_display": { "description": "Not stored in WARHAMMER III files.", "type": "integer" },
+										"filters": {
+											"description": "Conditions on the participant (not stored in WARHAMMER III files).",
+											"type": "array",
+											"items": {
+												"type": "object",
+												"required": ["equals", "or", "filter_type", "value"],
+												"additionalProperties": false,
+												"properties": {
+													"equals": { "type": "boolean" },
+													"or": { "type": "boolean" },
+													"filter_type": { "type": "integer" },
+													"value": { "type": "string" }
+												}
+											}
+										},
+										"uk": { "description": "Unknown (not stored in WARHAMMER III files).", "type": "integer" },
+										"mount_filename": { "description": "Pack path of the mount's .anim file (WARHAMMER III).", "type": "string" }
+									}
+								}
+							}
+						}
+					}
+				},
+				"state": {
+					"type": "object",
+					"required": ["start", "end"],
+					"additionalProperties": false,
+					"properties": {
+						"start": { "description": "State at the start.", "$ref": "#/definitions/state" },
+						"end": { "description": "State at the end, e.g. Dead for the one who is killed.", "$ref": "#/definitions/state" }
+					}
+				},
+				"uk1": { "description": "Unknown (Three Kingdoms).", "type": "integer" },
+				"uk2": { "description": "Unknown (Three Kingdoms).", "type": "integer" },
+				"uk3": { "description": "Unknown (WARHAMMER III).", "type": "integer" },
+				"uk4": { "description": "Unknown (WARHAMMER III).", "type": "integer" }
+			}
+		}
+	}
+}

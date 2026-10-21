@@ -246,6 +246,60 @@ describe('Total War Modding Tools extension', () => {
 		}
 	});
 
+	it('checks the DB keys of portrait settings and shows texture thumbnails in hovers', async function () {
+		if (!fs.existsSync(path.join(wh3, 'data', 'data.pack'))) {
+			this.skip();
+		}
+		this.timeout(180000);
+		await api.sources.configure({ exeDir: wh3, modListFile: '', game: 'warhammer_3' });
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const rpfm = require(path.join(extensionRoot, 'native', 'rpfm-interface.node')) as RpfmModule;
+		const game = await api.sources.packFile(vscode.Uri.parse('totalwar:/@basegame/ui/portraits/portholes/portrait_settings__.bin'));
+		assert.ok(game);
+		const settings = JSON.parse(rpfm.decodeToJson(game.bytes, 'portrait_settings__.bin', 'warhammer_3')!.json) as { entries: { id: string }[] };
+		const realId = settings.entries[1].id;
+		settings.entries = settings.entries.slice(0, 2);
+		settings.entries[0].id = 'tw_no_such_art_set';
+		const file = vscode.Uri.file(path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'twref-')), 'portrait_settings_refs.bin'));
+		fs.writeFileSync(file.fsPath, rpfm.encodeFromJson(JSON.stringify(settings), 'PortraitSettings', 'portrait_settings_refs.bin', 'warhammer_3'));
+
+		await vscode.commands.executeCommand('vscode.openWith', file, 'totalwar.decodedEditor');
+		let doc: vscode.TextDocument | undefined;
+		for (let i = 0; i < 100 && !(doc = vscode.workspace.textDocuments.find((d) => d.uri.scheme === 'totalwar-decoded' && d.uri.path.includes('refs'))); i++) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+		assert.ok(doc, 'JSON not opened');
+		let problems: vscode.Diagnostic[] = [];
+		for (let i = 0; i < 300 && !(problems = vscode.languages.getDiagnostics(doc.uri)).some((d) => d.message.includes('tw_no_such_art_set')); i++) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+		assert.ok(problems.some((d) => d.message.includes('tw_no_such_art_set')), problems.map((d) => d.message).join('\n'));
+		assert.ok(!problems.some((d) => d.message.includes(realId)));
+		const hovers = await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', doc.uri, doc.positionAt(doc.getText().indexOf(realId) + 2));
+		const text = (h: vscode.Hover[]) => h.flatMap((x) => x.contents).map((c) => (typeof c === 'string' ? c : c.value)).join('\n');
+		assert.match(text(hovers), /campaign_character_art_sets_tables/);
+		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+		// A texture path in a wsmodel of the mod: the hover shows its thumbnail.
+		const holder = (await api.sources.packSources()).at(-1)!.holder;
+		const dds = holder.paths().find((p) => /^variantmeshes\/.*_base_colour\.dds$/i.test(p));
+		assert.ok(dds, 'no texture in the game');
+		const pack = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, 'pack');
+		const wsmodel = path.join(pack, 'variantmeshes', 'test', 'thumb.wsmodel');
+		fs.mkdirSync(path.dirname(wsmodel), { recursive: true });
+		fs.writeFileSync(wsmodel, `<model><texture>${dds}</texture></model>\n`);
+		try {
+			const ws = await vscode.workspace.openTextDocument(wsmodel);
+			const thumbHover = await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', ws.uri, ws.positionAt(ws.getText().indexOf(dds) + 5));
+			const image = /!\[\]\((file:[^)]+)\)/.exec(text(thumbHover));
+			assert.ok(image, text(thumbHover));
+			assert.ok(fs.existsSync(vscode.Uri.parse(image[1]).fsPath), 'thumbnail not written');
+		} finally {
+			await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+			fs.rmSync(pack, { recursive: true, force: true });
+		}
+	});
+
 	it('edits portrait settings as JSON and saves them as binary', async function () {
 		if (!fs.existsSync(path.join(wh3, 'data', 'data.pack'))) {
 			this.skip();
@@ -259,7 +313,7 @@ describe('Total War Modding Tools extension', () => {
 
 		await vscode.commands.executeCommand('vscode.openWith', file, 'totalwar.decodedEditor');
 		let doc: vscode.TextDocument | undefined;
-		for (let i = 0; i < 100 && !(doc = vscode.workspace.textDocuments.find((d) => d.uri.scheme === 'totalwar-decoded')); i++) {
+		for (let i = 0; i < 100 && !(doc = vscode.workspace.textDocuments.find((d) => d.uri.scheme === 'totalwar-decoded' && d.uri.path.includes('portrait_settings_test'))); i++) {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 		}
 		assert.ok(doc, 'JSON not opened');

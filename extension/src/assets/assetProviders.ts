@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
@@ -5,8 +6,12 @@ import * as vscode from 'vscode';
 import { VIRTUAL_SCHEME } from '../adapter/pathMapper';
 import { DECODED_SCHEME, DecodedFileSystemProvider } from '../decoded/DecodedFileSystemProvider';
 import { modPackFolder } from '../modProject';
+import { rpfm } from '../rpfm';
 import { LiveSourceFS } from '../SourceFileSystemProvider';
 import { ASSET_EXTENSIONS, findAssetReferences, pathPrefixAt, toPackPath } from './references';
+
+/** Largest side of texture thumbnails in hovers, in pixels. */
+const THUMBNAIL_SIZE = 160;
 
 /** Text files that reference assets: in the virtual files, and in the mod's pack folder. */
 export const ASSET_DOCUMENTS: vscode.DocumentSelector = [
@@ -87,7 +92,31 @@ export class AssetLinkProvider implements vscode.DocumentLinkProvider {
 
 /** Hovering an asset path tells where the game gets the file from. */
 export class AssetHoverProvider implements vscode.HoverProvider {
-	constructor(private readonly assets: AssetResolver) {}
+	/** @param thumbnails Folder for texture thumbnails (hovers show images from files). */
+	constructor(private readonly assets: AssetResolver, private readonly thumbnails: string) {}
+
+	/** A small PNG of a texture, written to the thumbnails folder; undefined for other files or when it cannot be read. */
+	private async thumbnail(packPath: string, uri: vscode.Uri): Promise<vscode.Uri | undefined> {
+		if (!/\.(dds|png|tga|jpe?g)$/i.test(packPath)) {
+			return undefined;
+		}
+		try {
+			const stat = await vscode.workspace.fs.stat(uri);
+			const name = createHash('sha1').update(`${uri.toString()}|${stat.mtime}|${stat.size}`).digest('hex');
+			const file = path.join(this.thumbnails, `${name}.png`);
+			if (!fs.existsSync(file)) {
+				const png = rpfm().imageThumbnail(Buffer.from(await vscode.workspace.fs.readFile(uri)), packPath, THUMBNAIL_SIZE);
+				if (!png) {
+					return undefined;
+				}
+				fs.mkdirSync(this.thumbnails, { recursive: true });
+				fs.writeFileSync(file, png);
+			}
+			return vscode.Uri.file(file);
+		} catch {
+			return undefined; // a texture format the image library does not read
+		}
+	}
 
 	async provideHover(doc: vscode.TextDocument, pos: vscode.Position): Promise<vscode.Hover | undefined> {
 		const offset = doc.offsetAt(pos);
@@ -98,7 +127,12 @@ export class AssetHoverProvider implements vscode.HoverProvider {
 		const found = await this.assets.locate(ref.path);
 		const range = new vscode.Range(doc.positionAt(ref.start), doc.positionAt(ref.end));
 		if (found) {
-			return new vscode.Hover(`\`${ref.path}\` from **${found.from}**`, range);
+			const md = new vscode.MarkdownString(`\`${ref.path}\` from **${found.from}**`);
+			const thumb = await this.thumbnail(ref.path, found.uri);
+			if (thumb) {
+				md.appendMarkdown(`\n\n![](${thumb.toString()})`);
+			}
+			return new vscode.Hover(md, range);
 		}
 		return this.assets.canCheck ? new vscode.Hover(`\`${ref.path}\` is not in the mod or in the packs of the game and mod list.`, range) : undefined;
 	}
@@ -217,7 +251,7 @@ function decodeText(bytes: Uint8Array): string {
 }
 
 /** Offsets to positions for text that is not an open document. */
-class LineIndex {
+export class LineIndex {
 	private readonly starts = [0];
 
 	constructor(text: string) {
@@ -244,15 +278,18 @@ class LineIndex {
 }
 
 /** Registers the asset path features. */
-export function registerAssetProviders(sources: LiveSourceFS): { diagnostics: AssetDiagnostics; disposables: vscode.Disposable[] } {
+export function registerAssetProviders(sources: LiveSourceFS, storage: string): { diagnostics: AssetDiagnostics; disposables: vscode.Disposable[] } {
 	const assets = new AssetResolver(sources);
+	// Thumbnails of the last session are not needed any more.
+	const thumbnails = path.join(storage, 'thumbnails');
+	fs.rmSync(thumbnails, { recursive: true, force: true });
 	const diagnostics = new AssetDiagnostics(assets, sources.onDidReload);
 	return {
 		diagnostics,
 		disposables: [
 			diagnostics,
 			vscode.languages.registerDocumentLinkProvider(ASSET_DOCUMENTS, new AssetLinkProvider(assets)),
-			vscode.languages.registerHoverProvider(ASSET_DOCUMENTS, new AssetHoverProvider(assets)),
+			vscode.languages.registerHoverProvider(ASSET_DOCUMENTS, new AssetHoverProvider(assets, thumbnails)),
 			vscode.languages.registerCompletionItemProvider(ASSET_DOCUMENTS, new AssetCompletionProvider(assets), ...AssetCompletionProvider.triggers),
 		],
 	};

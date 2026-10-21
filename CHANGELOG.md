@@ -12,10 +12,15 @@
   completion; paths in the mod that point at no file are reported, also by
   **TotalWar: Check Mod DB Tables, Loc Files and Asset Paths**.
 - Portrait settings, battle animation fragments, anim tables, matched combat,
-  BMD and vegetation files open as JSON, with JSON schemas for portrait settings and
-  animation fragments, and save back to binary. A file is editable when saving
-  it unchanged gives back its exact bytes (checked on opening), otherwise read
-  only; saves are checked by reading them back.
+  BMD and vegetation files open as JSON, with JSON schemas, and save back to
+  binary. A file is editable when saving it unchanged gives back its exact
+  bytes (checked on opening), otherwise read only; saves are checked by reading
+  them back. **Copy to Mod** works from the JSON of a game file.
+- Portrait settings: art set ids and variant file names show their DB row on
+  hover, complete from the tables, and are reported when missing.
+- Texture thumbnails in the hovers of asset paths.
+- **TotalWar: Create Project from Pack…** and **TotalWar: Import Pack into
+  Project…** unpack a pack into a new or the open project.
 
 ## 2.0.0
 

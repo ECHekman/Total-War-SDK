@@ -7,7 +7,7 @@ import { DEFAULT_GAME, gameByKey } from './games';
 import { listSaveGames, saveGamesFolder } from './saves';
 import { findGameExecutable } from './steam';
 
-function configuredGame() {
+export function configuredGame() {
 	return gameByKey(vscode.workspace.getConfiguration('totalwar').get<string>('game') ?? DEFAULT_GAME);
 }
 
@@ -50,18 +50,9 @@ export async function createModProject(context: vscode.ExtensionContext): Promis
 	if (!parent?.[0]) {
 		return;
 	}
-	const game = configuredGame();
-	let exe = await findGameExecutable(game);
+	const exe = await gameExecutable();
 	if (!exe) {
-		const picked = await vscode.window.showOpenDialog({
-			title: `${game.title} executable (${game.exe})`,
-			canSelectMany: false,
-			filters: { 'Game executable': ['exe'] },
-		});
-		exe = picked?.[0]?.fsPath;
-		if (!exe) {
-			return;
-		}
+		return;
 	}
 	const target = path.join(parent[0].fsPath, modName);
 	let workspaceFile: string;
@@ -71,8 +62,28 @@ export async function createModProject(context: vscode.ExtensionContext): Promis
 		void vscode.window.showErrorMessage((e as Error).message);
 		return;
 	}
+	await offerToOpen(target, workspaceFile);
+}
+
+/** The configured game's executable: found through Steam, else picked by the user. */
+export async function gameExecutable(): Promise<string | undefined> {
+	const game = configuredGame();
+	const exe = await findGameExecutable(game);
+	if (exe) {
+		return exe;
+	}
+	const picked = await vscode.window.showOpenDialog({
+		title: `${game.title} executable (${game.exe})`,
+		canSelectMany: false,
+		filters: { 'Game executable': ['exe'] },
+	});
+	return picked?.[0]?.fsPath;
+}
+
+/** Offers to open a project just created. */
+export async function offerToOpen(target: string, workspaceFile: string, detail = ''): Promise<void> {
 	const choice = await vscode.window.showInformationMessage(
-		`Created ${target}. Open it?`, 'Open', 'Open in New Window');
+		`Created ${target}.${detail} Open it?`, 'Open', 'Open in New Window');
 	if (choice && fs.existsSync(workspaceFile)) {
 		await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspaceFile),
 			{ forceNewWindow: choice === 'Open in New Window' });

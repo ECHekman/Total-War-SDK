@@ -91,8 +91,9 @@ export function isDbTablePath(packPath: string): boolean {
  * `decodeToJson`), as custom editor selectors (package.json
  * `totalwar.decodedEditor`). `.atlas` and `groupformations.bin` are left
  * out: in WH3 the atlases are Spine text files and group formations are not
- * supported; "Open as JSON" still tries them. (RPFM reads BMD versions 23-27,
- * 97% of WH3's; the rest are old prefabs that show the decode error.)
+ * supported; "Open as JSON" still tries them. (RPFM reads about 90% of WH3's
+ * BMDs; the rest use a file or section version it does not know and show the
+ * decode error.)
  */
 export const DECODED_PATTERNS = [
 	'**/*portrait_settings*.bin', '**/animations/**/*_tables.bin', '**/animations/matched_combat/**/*.bin',

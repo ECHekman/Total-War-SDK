@@ -1012,6 +1012,34 @@ impl PackHolder {
     }
 }
 
+// ---- Image thumbnails -------------------------------------------------------------
+
+/// A PNG thumbnail of an image file (`.dds`, `.png`, `.tga`, `.jpg`; the type
+/// comes from `pack_path`), at most `max_size` pixels wide and high. None for
+/// other files.
+#[napi]
+pub fn image_thumbnail(bytes: Buffer, pack_path: String, max_size: u32) -> Result<Option<Buffer>> {
+    let mut file = file_from_bytes(&bytes, &pack_path)?;
+    if file.file_type() != FileType::Image {
+        return Ok(None);
+    }
+    let mut extra = DecodeableExtraData::default();
+    extra.set_is_dds(pack_path.to_lowercase().ends_with(".dds"));
+    let context = format!("Could not read {pack_path}");
+    let Some(RFileDecoded::Image(decoded)) = no_panic(&context, || file.decode(&Some(extra), false, true))?
+        .map_err(to_napi(&context))? else {
+        return Ok(None);
+    };
+    // DDS files come converted to PNG; the other formats the image crate reads itself.
+    let data = decoded.converted_data().as_deref().unwrap_or(decoded.data());
+    let image = no_panic(&context, || image::load_from_memory(data))?.map_err(to_napi(&context))?;
+    let mut png = vec![];
+    image.thumbnail(max_size, max_size)
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .map_err(to_napi(&context))?;
+    Ok(Some(png.into()))
+}
+
 #[cfg(test)]
 mod json_tests {
     use super::*;
@@ -1085,6 +1113,17 @@ mod json_tests {
         let json = r#"{"version":1,"entries":[{"id":"","participants":[{"team":0,"uk1":0,"uk2":0,"uk3":0,"uk4":0,"state":{"start":"Alive","end":"Alive"},"entity_info":[]}]}]}"#;
         let e = encode_from_json(json.to_owned(), "MatchedCombat".to_owned(), "animations/matched_combat/x.bin".to_owned(), "warhammer_3".to_owned());
         assert!(e.is_err());
+    }
+
+    #[test]
+    fn thumbnails_of_images() {
+        let mut png = vec![];
+        image::RgbaImage::from_pixel(400, 200, image::Rgba([255, 0, 0, 255]))
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        let thumb = image_thumbnail(png.into(), "ui/x.png".to_owned(), 100).unwrap().unwrap();
+        let back = image::load_from_memory(&thumb).unwrap();
+        assert_eq!((back.width(), back.height()), (100, 50));
+        assert!(image_thumbnail(b"x".to_vec().into(), "script/x.lua".to_owned(), 100).unwrap().is_none());
     }
 
     #[test]
