@@ -94,21 +94,29 @@ the debugger and from links.
 - **Asset paths** in variant mesh definitions, wsmodels, materials and other XML
   files (`variantmeshes/.../x.rigid_model_v2`, `.dds`, `.anim`, ...) are links:
   Ctrl+click opens the copy the game uses, from your mod or the packs, and
-  hovering one tells which pack it comes from. Paths complete folder by folder
+  hovering one tells which pack it comes from, with a thumbnail for textures
+  (`.dds`, `.png`, `.tga`, `.jpg`). Paths complete folder by folder
   as you type (or with Ctrl+Space after the quote). Paths in your mod that point
   at no file get a warning.
 - **Binary files as JSON**: portrait settings (`portrait_settings*.bin`), battle
   animation fragments (`animations/database/battle/bin/*.bin`), anim tables,
-  matched combat files, battle map definitions (`.bmd`) and vegetation open as JSON in a normal text editor,
-  with validation and field descriptions for portrait settings and animation
-  fragments. Saving writes the binary file again; a value the format cannot hold
+  matched combat files, battle map definitions (`.bmd`) and vegetation open as
+  JSON in a normal text editor, with validation and field descriptions. Saving
+  writes the binary file again; a value the format cannot hold
   is refused instead of saved. When a file opens, the extension checks that
   saving it unchanged gives back the exact same bytes, so nothing RPFM does not
   understand can be lost; a file that fails the check opens read only and says
   why (in WARHAMMER III every file that decodes passes). **TotalWar: Open as
   JSON** in the Explorer's context menu also tries `.atlas` and
   `groupformations.bin`. A BMD (or a part of one) in a version RPFM does not
-  know, about one in ten of the game's, only opens in the default editor.
+  know, about one in ten of the game's, only opens in the default editor. In
+  the JSON of a game file, **TotalWar: Copy to Mod** (editor title) copies the
+  binary file into your mod.
+- **DB keys in portrait settings**: an entry's `id` (an art set of
+  `campaign_character_art_sets_tables`) and a variant's `filename` (the
+  `variant_filename` of `variants_tables`) show their row on hover, complete
+  from the tables, and get a warning when no row has them, also from
+  **TotalWar: Check Mod**. The mod's own tables count, packed or not.
 
 ### Game Database
 The DB tables (units, buildings, effects, ...) show the values the game uses
@@ -199,6 +207,14 @@ Mods can depend on Steam Workshop items, other packs, or other mods you develop;
 see [Mods that depend on other mods](#mods-that-depend-on-other-mods).
 
 ## Using it with an existing mod
+
+To start from a mod you only have as a `.pack` (yours, or one to learn from),
+run **TotalWar: Create Project from Pack…** (also in the Explorer's context menu
+of `.pack` files): it makes a new project, like **Create Mod Project…**, with
+the pack's files in its `pack` folder. **TotalWar: Import Pack into Project…**
+unpacks a pack into the open project, asking whether to overwrite the files it
+already has. DB tables and loc files come out in the format of
+`totalwar.newTableFormat` (binary, or TSV).
 
 Open your mod's folder and press F5. Without a `launch.json`, the extension
 finds the game through Steam and starts it. Every debug session installs the

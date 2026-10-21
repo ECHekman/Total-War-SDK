@@ -1,0 +1,57 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Vegetation",
+	"description": "A .vegetation file next to a BMD (x.bmd.vegetation): the trees and grass placed on its battle map.",
+	"type": "object",
+	"required": ["serialise_version", "tree_list", "grass_list"],
+	"additionalProperties": false,
+	"properties": {
+		"serialise_version": { "description": "File format version.", "type": "integer" },
+		"tree_list": {
+			"type": "object",
+			"required": ["serialise_version", "tree_list"],
+			"additionalProperties": false,
+			"properties": {
+				"serialise_version": { "type": "integer" },
+				"tree_list": {
+					"description": "Trees grouped by model.",
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["key", "value"],
+						"additionalProperties": false,
+						"properties": {
+							"key": { "description": "Pack path of the trees' model (.wsmodel or .rigid_model_v2).", "type": "string" },
+							"value": {
+								"description": "Where the trees of this model stand.",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": ["id", "x", "y", "z", "rotation", "scale", "flags"],
+									"additionalProperties": false,
+									"properties": {
+										"id": { "description": "Made up by RPFM each time it reads the file (not stored): any number works.", "type": "integer" },
+										"x": { "type": "number" },
+										"y": { "description": "Height.", "type": "number" },
+										"z": { "type": "number" },
+										"rotation": { "description": "Rotation, 0 to 255 for a full turn.", "type": "integer", "minimum": 0, "maximum": 255 },
+										"scale": { "type": "number" },
+										"flags": { "type": "integer" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"grass_list": {
+			"type": "object",
+			"required": ["serialise_version", "grass_list"],
+			"properties": {
+				"serialise_version": { "type": "integer" },
+				"grass_list": { "description": "Grass placed on the map.", "type": "array" }
+			}
+		}
+	}
+}

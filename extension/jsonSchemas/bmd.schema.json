@@ -1,0 +1,151 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Battle map definition",
+	"description": "A .bmd file (FASTBIN0): a battle map or a prefab placed in one. Each section is a list of one kind of object.",
+	"type": "object",
+	"required": [
+		"serialise_version"
+	],
+	"properties": {
+		"serialise_version": {
+			"description": "File format version: RPFM reads 23 to 27.",
+			"type": "integer"
+		},
+		"battlefield_building_list": {
+			"description": "Buildings on the map (walls, houses, towers) that units can interact with.",
+			"type": "object"
+		},
+		"battlefield_building_list_far": {
+			"description": "Buildings drawn only from far away.",
+			"type": "object"
+		},
+		"capture_location_set": {
+			"description": "Capture points and their zones.",
+			"type": "object"
+		},
+		"ef_line_list": {
+			"description": "Lines used by the battle logic (e.g. wall lines).",
+			"type": "object"
+		},
+		"go_outlines": {
+			"description": "Outlines of areas units can go.",
+			"type": "object"
+		},
+		"non_terrain_outlines": {
+			"description": "Outlines of areas that are not terrain.",
+			"type": "object"
+		},
+		"zones_template_list": {
+			"description": "Zone templates.",
+			"type": "object"
+		},
+		"prefab_instance_list": {
+			"description": "Other prefabs (BMDs) placed in this one, with their transforms.",
+			"type": "object"
+		},
+		"bmd_outline_list": {
+			"description": "Outline of the map.",
+			"type": "object"
+		},
+		"terrain_outlines": {
+			"description": "Terrain outlines.",
+			"type": "object"
+		},
+		"lite_building_outlines": {
+			"description": "Simplified building outlines.",
+			"type": "object"
+		},
+		"camera_zones": {
+			"description": "Areas the camera is limited to.",
+			"type": "object"
+		},
+		"civilian_deployment_list": {
+			"description": "Where civilians spawn.",
+			"type": "object"
+		},
+		"civilian_shelter_list": {
+			"description": "Where civilians flee to.",
+			"type": "object"
+		},
+		"prop_list": {
+			"description": "Props (models) placed on the map: keys are model paths, props refer to them by key_index.",
+			"type": "object"
+		},
+		"particle_emitter_list": {
+			"description": "Particle effects (fire, smoke, waterfalls).",
+			"type": "object"
+		},
+		"ai_hints": {
+			"description": "Hints for the battle AI (defensive lines, paths).",
+			"type": "object"
+		},
+		"light_probe_list": {
+			"description": "Light probes.",
+			"type": "object"
+		},
+		"terrain_stencil_triangle_list": {
+			"description": "Triangles cut out of the terrain.",
+			"type": "object"
+		},
+		"point_light_list": {
+			"description": "Point lights.",
+			"type": "object"
+		},
+		"building_projectile_emitter_list": {
+			"description": "Buildings that shoot (towers).",
+			"type": "object"
+		},
+		"playable_area": {
+			"description": "The playable area of the map.",
+			"type": "object"
+		},
+		"custom_material_mesh_list": {
+			"description": "Meshes with custom materials.",
+			"type": "object"
+		},
+		"terrain_stencil_blend_triangle_list": {
+			"description": "Triangles blended into the terrain.",
+			"type": "object"
+		},
+		"spot_light_list": {
+			"description": "Spot lights.",
+			"type": "object"
+		},
+		"sound_shape_list": {
+			"description": "Areas that play sounds.",
+			"type": "object"
+		},
+		"composite_scene_list": {
+			"description": "Composite scenes (effects made of several parts).",
+			"type": "object"
+		},
+		"deployment_list": {
+			"description": "Deployment zones of the armies.",
+			"type": "object"
+		},
+		"bmd_catchment_area_list": {
+			"description": "Catchment areas.",
+			"type": "object"
+		},
+		"toggleable_buildings_slot_list": {
+			"description": "Building slots that can be switched on or off (settlement buildings).",
+			"type": "object"
+		},
+		"terrain_decal_list": {
+			"description": "Decals on the terrain.",
+			"type": "object"
+		},
+		"tree_list_reference_list": {
+			"description": "Tree lists used by the map.",
+			"type": "object"
+		},
+		"grass_list_reference_list": {
+			"description": "Grass lists used by the map.",
+			"type": "object"
+		},
+		"water_outlines": {
+			"description": "Outlines of water.",
+			"type": "object"
+		}
+	}
+}

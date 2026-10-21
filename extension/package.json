@@ -43,6 +43,7 @@
 		"onStartupFinished",
 		"onCommand:totalwar.pickSaveGame",
 		"onCommand:totalwar.createModProject",
+		"onCommand:totalwar.createProjectFromPack",
 		"onCustomEditor:totalwar.dbEditor"
 	],
 	"scripts": {
@@ -67,6 +68,16 @@
 			{
 				"command": "totalwar.createModProject",
 				"title": "Create Mod Project…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "totalwar.createProjectFromPack",
+				"title": "Create Project from Pack…",
+				"category": "TotalWar"
+			},
+			{
+				"command": "totalwar.importPack",
+				"title": "Import Pack into Project…",
 				"category": "TotalWar"
 			},
 			{
@@ -352,6 +363,16 @@
 					"command": "totalwar.openDecoded",
 					"when": "!explorerResourceIsFolder && resourcePath =~ /(portrait_settings[^\\/]*\\.bin|[\\/]animations[\\/].*\\.bin|\\.atlas|\\.frg|groupformations\\.bin|\\.bmd|\\.vegetation)$/i",
 					"group": "navigation@12"
+				},
+				{
+					"command": "totalwar.createProjectFromPack",
+					"when": "!explorerResourceIsFolder && resourceExtname == .pack",
+					"group": "navigation@13"
+				},
+				{
+					"command": "totalwar.importPack",
+					"when": "!explorerResourceIsFolder && resourceExtname == .pack",
+					"group": "navigation@13"
 				}
 			],
 			"editor/context": [
@@ -417,7 +438,7 @@
 				},
 				{
 					"command": "totalwar.copyToMod",
-					"when": "resourceScheme == totalwar"
+					"when": "resourceScheme == totalwar || resourceScheme == totalwar-decoded && resource =~ /[?]totalwar(:|%3A)/"
 				},
 				{
 					"command": "totalwar.openDecoded",
@@ -427,7 +448,7 @@
 			"editor/title": [
 				{
 					"command": "totalwar.copyToMod",
-					"when": "resourceScheme == totalwar",
+					"when": "resourceScheme == totalwar || resourceScheme == totalwar-decoded && resource =~ /[?]totalwar(:|%3A)/",
 					"group": "navigation"
 				}
 			]
@@ -919,6 +940,38 @@
 					"*.frg.json"
 				],
 				"url": "./jsonSchemas/anim_fragment_battle.schema.json"
+			},
+			{
+				"fileMatch": [
+					"**/animations/**/*_tables.bin.json"
+				],
+				"url": "./jsonSchemas/anims_table.schema.json"
+			},
+			{
+				"fileMatch": [
+					"**/animations/matched_combat/**/*.bin.json",
+					"**/animations/database/matched/**/*.bin.json",
+					"**/animations/database/trigger/**/*.bin.json"
+				],
+				"url": "./jsonSchemas/matched_combat.schema.json"
+			},
+			{
+				"fileMatch": [
+					"*.atlas.json"
+				],
+				"url": "./jsonSchemas/atlas.schema.json"
+			},
+			{
+				"fileMatch": [
+					"*.bmd.json"
+				],
+				"url": "./jsonSchemas/bmd.schema.json"
+			},
+			{
+				"fileMatch": [
+					"*.vegetation.json"
+				],
+				"url": "./jsonSchemas/vegetation.schema.json"
 			}
 		]
 	},

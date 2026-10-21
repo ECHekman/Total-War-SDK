@@ -181,3 +181,9 @@ export declare function decodeToJson(bytes: Buffer, packPath: string, game: stri
  * read back the same.
  */
 export declare function encodeFromJson(json: string, fileType: string, packPath: string, game: string): Buffer;
+
+/**
+ * A PNG thumbnail of an image file (`.dds`, `.png`, `.tga`, `.jpg`; the type
+ * comes from `packPath`), at most `maxSize` pixels wide and high. Null for other files.
+ */
+export declare function imageThumbnail(bytes: Buffer, packPath: string, maxSize: number): Buffer | null;

@@ -1,0 +1,30 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Atlas",
+	"description": "A CA binary .atlas file: named rectangles of a texture. (WARHAMMER III's .atlas files are Spine text atlases instead.)",
+	"type": "object",
+	"required": ["version", "unknown", "entries"],
+	"additionalProperties": false,
+	"properties": {
+		"version": { "description": "File format version (1).", "type": "integer" },
+		"unknown": { "type": "integer" },
+		"entries": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["string1", "string2", "x_1", "y_1", "x_2", "y_2", "width", "height"],
+				"additionalProperties": false,
+				"properties": {
+					"string1": { "description": "Name of the rectangle.", "type": "string" },
+					"string2": { "description": "Pack path of the texture.", "type": "string" },
+					"x_1": { "description": "Left edge, 0 to 1 of the texture width.", "type": "number" },
+					"y_1": { "description": "Top edge, 0 to 1 of the texture height.", "type": "number" },
+					"x_2": { "description": "Right edge, 0 to 1 of the texture width.", "type": "number" },
+					"y_2": { "description": "Bottom edge, 0 to 1 of the texture height.", "type": "number" },
+					"width": { "description": "Width in pixels.", "type": "number" },
+					"height": { "description": "Height in pixels.", "type": "number" }
+				}
+			}
+		}
+	}
+}

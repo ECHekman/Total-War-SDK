@@ -1,0 +1,40 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Anims table",
+	"description": "An animations/**/*_tables.bin file (WARHAMMER II, Three Kingdoms): which animation fragments each animation table (a skeleton's set of animations) uses.",
+	"type": "object",
+	"required": ["version", "entries"],
+	"additionalProperties": false,
+	"properties": {
+		"version": { "description": "File format version (2).", "type": "integer" },
+		"entries": {
+			"description": "One entry per animation table.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["table_name", "skeleton_type", "mount_table_name", "fragments", "uk_6", "uk_7"],
+				"additionalProperties": false,
+				"properties": {
+					"table_name": { "description": "Name of the animation table, as units refer to it.", "type": "string" },
+					"skeleton_type": { "description": "Skeleton the animations are for, e.g. humanoid01.", "type": "string" },
+					"mount_table_name": { "description": "Animation table of the mount, for riders.", "type": "string" },
+					"fragments": {
+						"description": "The animation fragments the table uses.",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["name", "uk_5"],
+							"additionalProperties": false,
+							"properties": {
+								"name": { "description": "Name of an animation fragment.", "type": "string" },
+								"uk_5": { "description": "Unknown.", "type": "integer" }
+							}
+						}
+					},
+					"uk_6": { "description": "Unknown.", "type": "boolean" },
+					"uk_7": { "description": "Unknown.", "type": "boolean" }
+				}
+			}
+		}
+	}
+}

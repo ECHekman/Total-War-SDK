@@ -2,6 +2,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 
 import { registerAssetProviders } from './assets/assetProviders';
+import { registerDbRefProviders } from './assets/dbRefProviders';
 import { CONNECTED_EVENT, TwLuaDebugSession, WAITING_EVENT } from './adapter/session';
 import { DecodedEditorProvider, openDecoded } from './decoded/DecodedEditorProvider';
 import { DECODED_SCHEME, DecodedFileSystemProvider } from './decoded/DecodedFileSystemProvider';
@@ -20,6 +21,7 @@ import { isModWorkspace, LuaApiService, offerLuaSetup } from './lua/luaLanguage'
 import { DbKeyLinkProvider, TwLuaCompletionProvider } from './lua/luaProviders';
 import { GameTools } from './runtime/gameTools';
 import { PACK_TASK_TYPE, PackTaskProvider } from './PackTaskProvider';
+import { createProjectFromPack, importPack } from './packCommands';
 import { createModProject, pickSaveGame } from './projectCommands';
 import { LiveSourceFS, VIRTUAL_ROOT } from './SourceFileSystemProvider';
 import { VIRTUAL_SCHEME } from './adapter/pathMapper';
@@ -50,7 +52,8 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 	const dbTree = new DbTreeProvider(db, log);
 	const luaApi = new LuaApiService(context.globalStorageUri.fsPath, sources, log);
 	const modDiagnostics = new ModDiagnostics(db, log, isModWorkspace);
-	const assets = registerAssetProviders(sources);
+	const assets = registerAssetProviders(sources, context.globalStorageUri.fsPath);
+	const dbRefs = registerDbRefProviders(db);
 	const decoded = new DecodedFileSystemProvider(sources);
 	const dbEditor = new DbEditorProvider(db, context.extensionUri, log);
 	const configProvider = new TwDebugConfigurationProvider((config) => {
@@ -112,6 +115,7 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		}),
 		vscode.commands.registerCommand('totalwar.filterVirtualFiles', () => filterVirtualFiles()),
 		...assets.disposables,
+		...dbRefs.disposables,
 		vscode.workspace.registerFileSystemProvider(DECODED_SCHEME, decoded, { isCaseSensitive: false }),
 		vscode.window.registerCustomEditorProvider(DecodedEditorProvider.viewType, new DecodedEditorProvider(decoded)),
 		vscode.commands.registerCommand('totalwar.openDecoded', (target?: vscode.Uri) => {
@@ -148,7 +152,7 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		new GameTools(db, context.extensionUri),
 		vscode.commands.registerCommand('totalwar.checkMod', () => vscode.window.withProgress(
 			{ location: vscode.ProgressLocation.Notification, title: 'Checking the mod\'s DB tables, loc files and asset paths…' },
-			async () => await modDiagnostics.run() + await assets.diagnostics.checkWorkspace()).then(
+			async () => await modDiagnostics.run() + await assets.diagnostics.checkWorkspace() + await dbRefs.diagnostics.checkWorkspace()).then(
 			(n) => {
 				void vscode.commands.executeCommand('workbench.actions.view.problems');
 				void vscode.window.showInformationMessage(n ? `${n} problem(s) in the mod's DB tables, loc files and asset paths.` : 'No problems found in the mod\'s DB tables, loc files and asset paths.');
@@ -184,6 +188,9 @@ export function activate(context: vscode.ExtensionContext): TwLuaDebuggerApi {
 		vscode.languages.registerDocumentLinkProvider({ language: 'lua', scheme: 'file' }, new DbKeyLinkProvider(db)),
 		vscode.commands.registerCommand('totalwar.installDebuggerMod', () => installDebuggerMod(context)),
 		vscode.commands.registerCommand('totalwar.createModProject', () => createModProject(context)),
+		vscode.commands.registerCommand('totalwar.createProjectFromPack', (target?: vscode.Uri) => createProjectFromPack(context, db, target)),
+		vscode.commands.registerCommand('totalwar.importPack', (target?: vscode.Uri) => importPack(db, target).catch(
+			(e: Error) => vscode.window.showErrorMessage(e.message))),
 		vscode.commands.registerCommand('totalwar.pickSaveGame', () => pickSaveGame()),
 	);
 
