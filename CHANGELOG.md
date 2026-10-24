@@ -1,28 +1,6 @@
 # Changelog
 
-## Unreleased
-
-### New
-- Text files in the packs open in their language (XML for variant mesh
-  definitions, wsmodels, materials and the other formats RPFM reads as text),
-  decoded by RPFM, so UTF-16 files read correctly.
-- **TotalWar: Copy to Mod** copies a file from the virtual files into the mod's
-  `pack` folder at the same path.
-- Asset paths in XML files are links with hovers and folder-by-folder
-  completion; paths in the mod that point at no file are reported, also by
-  **TotalWar: Check Mod DB Tables, Loc Files and Asset Paths**.
-- Portrait settings, battle animation fragments, anim tables, matched combat,
-  BMD and vegetation files open as JSON, with JSON schemas, and save back to
-  binary. A file is editable when saving it unchanged gives back its exact
-  bytes (checked on opening), otherwise read only; saves are checked by reading
-  them back. **Copy to Mod** works from the JSON of a game file.
-- Portrait settings: art set ids and variant file names show their DB row on
-  hover, complete from the tables, and are reported when missing.
-- Texture thumbnails in the hovers of asset paths.
-- **TotalWar: Create Project from Pack…** and **TotalWar: Import Pack into
-  Project…** unpack a pack into a new or the open project.
-
-## 2.0.0
+## 0.0.1
 
 The first release of **Total War Modding Tools**, the successor to the TW Lua
 Debugger extension, published as a new extension (`Fietspompje.total-war-modding-tools`).
@@ -101,8 +79,26 @@ adapter now runs inside VS Code (TypeScript, `@vscode/debugadapter`).
   - Copy a game entity (unit, building, ...) with its rows and texts into the mod.
   - Campaign view, event monitor, running code in the game (and hot reload) and
     a sampling profiler while the game is connected.
+  - **TotalWar: Create Project from Pack…** and **TotalWar: Import Pack into
+    Project…** unpack a pack into a new or the open project.
+  - **TotalWar: Copy to Mod** copies a file from the virtual files into the
+    mod's `pack` folder at the same path.
+  - Text files in the packs open in their language (XML for variant mesh
+    definitions, wsmodels, materials and the other formats RPFM reads as
+    text), decoded by RPFM, so UTF-16 files read correctly.
+  - Asset paths in XML files are links with hovers, texture thumbnails and
+    folder-by-folder completion; paths in the mod that point at no file are
+    reported, also by **TotalWar: Check Mod DB Tables, Loc Files and Asset
+    Paths**.
+  - Portrait settings, battle animation fragments, anim tables, matched combat,
+    BMD and vegetation files open as JSON, with JSON schemas, and save back to
+    binary. A file is editable when saving it unchanged gives back its exact
+    bytes (checked on opening), otherwise read only; saves are checked by
+    reading them back. **Copy to Mod** works from the JSON of a game file.
+  - Portrait settings: art set ids and variant file names show their DB row on
+    hover, complete from the tables, and are reported when missing.
 
-### Fixed
+### Fixed from TW Lua Debugger 1.x
 - Stopping a game that Steam had restarted could stop other running copies of
   the game; now only copies started by the debug session are stopped.
 - Launching from a folder with spaces (e.g. `Program Files (x86)`) ignored the

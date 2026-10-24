@@ -50,6 +50,17 @@ jobs:
         working-directory: extension
         run: npm run test:vscode
 
+      - name: Check the tag matches the extension version
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: extension
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
       - name: Package
         working-directory: extension
         run: npx vsce package --target win32-x64 --out total-war-modding-tools-win32-x64.vsix
@@ -65,6 +76,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Job level so the steps' `if` can see them; a step's own env is not
+    # available to its condition.
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -76,12 +92,8 @@ jobs:
 
       - name: Publish to the Visual Studio Marketplace
         if: env.VSCE_PAT != ''
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx @vscode/vsce publish --packagePath *.vsix
+        run: npx --yes @vscode/vsce@4 publish --packagePath *.vsix
 
       - name: Publish to Open VSX
         if: env.OVSX_PAT != ''
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx ovsx publish *.vsix -p "$OVSX_PAT"
+        run: npx --yes ovsx publish --packagePath *.vsix -p "$OVSX_PAT"

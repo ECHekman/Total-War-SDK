@@ -1,11 +1,16 @@
 {
 	"name": "total-war-modding-tools",
 	"displayName": "Total War Modding Tools",
-	"version": "2.0.0",
+	"version": "0.0.1",
 	"publisher": "Fietspompje",
 	"icon": "images/icon.png",
 	"description": "Make Total War: WARHAMMER III mods in VS Code: Lua debugger, DB and loc table editors, game database browser, mod checks, Lua IntelliSense and pack tools. Unofficial.",
 	"license": "MIT",
+	"pricing": "Free",
+	"galleryBanner": {
+		"color": "#1e1e1e",
+		"theme": "dark"
+	},
 	"categories": [
 		"Debuggers",
 		"Programming Languages",
@@ -57,6 +62,7 @@
 		"test:lua": "npm run compile-tests && mocha --config .mocharc.json --grep \"\\[lua\\]\"",
 		"test:vscode": "npm run build && npm run compile-tests && node ./out-test/test/vscode/runTest.js",
 		"package": "vsce package --target win32-x64",
+		"publish": "vsce publish --target win32-x64",
 		"build-lua": "node scripts/build-lua51.mjs"
 	},
 	"dependencies": {

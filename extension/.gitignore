@@ -11,3 +11,4 @@ example/
 # copied from the repository root by esbuild.mjs
 LICENSE.txt
 NOTICE-vscode-mono-debug.txt
+CHANGELOG.md

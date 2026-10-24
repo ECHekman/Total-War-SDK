@@ -19,7 +19,7 @@ function copyAssets() {
 	fs.rmSync(exampleDst, { recursive: true, force: true });
 	fs.cpSync(exampleSrc, exampleDst, { recursive: true, filter: (src) => !/[\\/]out([\\/]|$)/.test(src) });
 
-	for (const file of ['LICENSE.txt', 'NOTICE-vscode-mono-debug.txt']) {
+	for (const file of ['LICENSE.txt', 'NOTICE-vscode-mono-debug.txt', 'CHANGELOG.md']) {
 		fs.copyFileSync(path.join(here, '..', file), path.join(here, file));
 	}
 

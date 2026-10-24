@@ -15,7 +15,7 @@ if type(debuggee) == 'table' and debuggee.protocol == 2 then
 end
 
 local PROTOCOL = 2
-local MOD_VERSION = '2.0.0'
+local MOD_VERSION = '0.0.1'
 local COMM_DIR = 'tw_lua_debugger/'
 local WELCOME_TIMEOUT = 5      -- seconds to wait for VS Code to answer our hello
 local SESSION_CHECK_INTERVAL = 1

@@ -124,6 +124,23 @@ The VSIX is platform specific because of the native module.
 
 ## Releasing
 
+One-time setup:
+
+1. Create the publisher `Fietspompje` at
+   <https://marketplace.visualstudio.com/manage> (sign in with the Microsoft
+   account that should own the extension). The ID must match `publisher` in
+   `extension/package.json`.
+2. Create a personal access token at <https://dev.azure.com> (User settings →
+   Personal access tokens): organization **All accessible organizations**,
+   scope **Marketplace → Manage**. Add it to the GitHub repository as the
+   `VSCE_PAT` secret (Settings → Secrets and variables → Actions).
+3. Optional, for Open VSX (VSCodium, Cursor and others): sign in at
+   <https://open-vsx.org>, sign the publisher agreement, create a token, run
+   `npx ovsx create-namespace Fietspompje -p <token>` once and add the token as
+   the `OVSX_PAT` secret.
+
+Every release:
+
 1. Bump `version` in `extension/package.json` and `MOD_VERSION` in
    `debuggee/script/_lib/mod/vscode-debuggee.lua` to the same value. A unit
    test fails if they differ, and the Debug Console reports a game still
@@ -134,4 +151,10 @@ The VSIX is platform specific because of the native module.
 3. Push a `v<version>` tag on `main`. CI builds and tests everything, attaches
    the VSIX to a GitHub release, and publishes it to the Marketplace
    (`Fietspompje.total-war-modding-tools`) and Open VSX when the `VSCE_PAT` / `OVSX_PAT`
-   secrets are set.
+   secrets are set. The build fails if the tag does not match the version.
+
+To publish by hand instead (after `cd rpfm-interface && npm run build`):
+
+```bash
+cd extension && npx vsce login Fietspompje && npm run publish
+```
